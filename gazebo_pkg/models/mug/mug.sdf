@@ -1,0 +1,407 @@
+<sdf version="1.4">
+    <model name="mug">
+        <pose>-2.600000 -6.300000 2.000000 0.000000 -0.000000 0.000000</pose>
+        <link name="mug_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            <inertial>
+                <pose>0.000125 -0.005375 0.046250 0.000000 -0.000000 0.000000</pose>
+                <inertia>
+                    <ixx>0.000334</ixx>
+                    <ixy>0.000000</ixy>
+                    <ixz>-0.000001</ixz>
+                    <iyy>0.000303</iyy>
+                    <iyz>0.000026</iyz>
+                    <izz>0.000165</izz>
+                </inertia>
+                <mass>0.0080000</mass>
+            </inertial>
+            <collision name="mug_bottom_collision">
+                <pose>0.000000 0.000000 0.005000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.080000 0.010000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_bottom_visual">
+                <pose>0.000000 0.000000 0.005000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.080000 0.010000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+            <collision name="mug_backside_collision">
+                <pose>0.039000 0.000000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.005000 0.080000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_backside_visual">
+                <pose>0.039000 0.000000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.005000 0.080000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>            
+            <collision name="mug_leftside_collision">
+                <pose>0.000000 0.038000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.005000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_leftside_visual">
+                <pose>0.000000 0.038000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.005000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+            <collision name="mug_frontside_collision">
+                <pose>-0.038000 0.000000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.005000 0.080000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_frontside_visual">
+                <pose>-0.038000 0.000000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.005000 0.080000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+
+            <collision name="mug_rightside_collision">
+                <pose>0.000000 -0.038000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.005000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_rightside_visual">
+                <pose>0.000000 -0.038000 0.060000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.080000 0.005000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+            <collision name="mug_help_right_collision">
+                <pose>0.021500 -0.021500 0.060000 0.000000 0.000000 -0.785398</pose>
+                <geometry>
+                    <box>
+                        <size>0.001000 0.045000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>            
+            <visual name="mug_help_right_visual">
+                <pose>0.021500 -0.021500 0.060000 0.000000 0.000000 -0.785398</pose>
+                <geometry>
+                    <box>
+                        <size>0.001000 0.045000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+            <collision name="mug_help_left_collision">
+                <pose>-0.021500 -0.021500 0.060000 0.000000 -0.000000 0.785398</pose>
+                <geometry>
+                    <box>
+                        <size>0.001000 0.045000 0.120000</size>
+                    </box>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.1</mu>
+                            <mu2>0.1</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>10.0</slip1>
+                            <slip2>10.0</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.0</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>100000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="mug_help_left_visual">
+                <pose>-0.021500 -0.021500 0.060000 0.000000 -0.000000 0.785398</pose>
+                <geometry>
+                    <box>
+                        <size>0.001000 0.045000 0.120000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+
+	    <!-- Visual Helper -->	
+            <!--visual name="mug_position_helper_visual">
+                <pose>0.000000 -0.038000 0.160000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <box>
+                        <size>0.020000 0.005000 0.020000</size>
+                    </box>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Grey</name>
+                    </script>
+                </material>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency-->
+		<!-- VISUAL PLUGIN -->		
+		<!--plugin name="mug_visual_plugin" filename="libmug_visual_plugin.so"/-->
+            <!--/visual-->
+
+            <gravity>1</gravity>
+            <self_collide>0</self_collide>
+            <kinematic>0</kinematic>
+        </link>
+        <static>0</static>
+
+        <!--plugin name="mug_plugin" filename="libmug_plugin.so" /-->
+
+    </model>
+</sdf>

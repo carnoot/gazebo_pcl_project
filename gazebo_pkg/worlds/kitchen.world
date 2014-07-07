@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <include>
+      <uri>model://kitchen_final</uri>
+    </include>	
+    
+    <include>
+      <uri>model://bottle</uri>
+    </include>
+    
+    <include>
+      <uri>model://bowl</uri>
+    </include>
+    
+    <include>
+      <uri>model://mug</uri>
+    </include>
+    
+    <include>
+      <uri>model://pot</uri>
+    </include>
+    
+  </world>
+</sdf>

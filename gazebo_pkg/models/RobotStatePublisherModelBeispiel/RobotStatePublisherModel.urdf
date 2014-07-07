@@ -1,0 +1,83 @@
+  <robot name ='RobotStatePublisherModel'>
+    <link name ="link_1">
+      <pose>0 0 0.5 0 0 0</pose>
+      <collision name ="collision_1">
+        <geometry>
+          <cylinder>
+          	<radius>0.3</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual_1">
+        <geometry>
+          <cylinder>
+          	<radius>0.3</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
+    
+    <joint name="joint_1" type="revolute">
+      <parent>link_1</parent>
+       <child>link_2</child>
+       <pose>1.5 0 0 0 0 0</pose>
+       <axis>
+       	<xyz>1.0 0 0</xyz>
+       	</axis>
+   </joint>
+   
+   <link name ="link_2">
+      <pose>1.5 0 0.5 0 0 0</pose>
+      <collision name ="collision_2">
+        <geometry>
+          <cylinder>
+          	<radius>0.2</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name="visual_2">
+        <geometry>
+          <cylinder>
+          	<radius>0.2</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
+    
+    <!--<joint name="joint_2" type="revolute">
+     <origin rpy="0 0 0" xyz="0.1 0 0"/>
+      <parent>link="link_2"</parent>
+       <child>link="link_3"</child>
+       <axis>
+       	<xyz>0 0 1</xyz>
+       	</axis>
+   </joint>
+   
+   <link name ='link_3'>
+      <pose>0 0 0 0 0 0</pose>
+      <collision name ='collision'>
+        <geometry>
+          <cylinder>
+          	<radius>0.5</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <visual name='visual'>
+        <geometry>
+          <cylinder>
+          	<radius>0.5</radius>
+          	<length>0.5</length>
+          </cylinder>
+        </geometry>
+      </visual>
+    </link>
+    
+  </model>
+</sdf>-->

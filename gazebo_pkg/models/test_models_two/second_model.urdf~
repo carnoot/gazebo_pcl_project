@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<robot name="mysecond">
+
+  <link name="base_link">
+    <visual>
+     <origin xyz="3 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.6 .2 .1"/>
+      </geometry>
+    </visual>
+
+   <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <box size="0.6 .2 .1"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="10"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="base_link">
+	<static>true</static>
+  </gazebo>
+
+ <link name="base_myfirst_link">
+    <visual>
+     <origin xyz="0 2 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.6" radius="0.2"/>
+      </geometry>
+    </visual>
+
+   <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+    <cylinder length="0.6" radius="0.2"/>
+      </geometry>
+    </collision>
+
+   <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="10"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+
+  <gazebo reference="base_myfirst_link">
+	<static>true</static>
+  </gazebo>
+
+  <joint name="first_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="base_myfirst_link"/>
+  </joint>
+
+</robot>

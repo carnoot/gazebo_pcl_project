@@ -1,0 +1,10 @@
+<sdf version='1.4'>
+  <model name='myfirst'>
+    <link name='__default__'>
+      <velocity_decay>
+        <linear>0</linear>
+        <angular>0</angular>
+      </velocity_decay>
+    </link>
+  </model>
+</sdf>

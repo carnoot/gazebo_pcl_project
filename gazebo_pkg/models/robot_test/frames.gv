@@ -1,0 +1,3 @@
+digraph G {
+"odom" -> "axis"[label="Broadcaster: /state_publisher\nAverage rate: 30.205 Hz\nMost recent transform: 405.564 \nBuffer length: 4.966 sec\n"];
+}

@@ -1,0 +1,13 @@
+find_package(Protobuf REQUIRED)
+
+set(PROTOBUF_IMPORT_DIRS)
+ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+  if(ITR MATCHES ".*gazebo-[0-9.]+$")
+    set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+  endif()
+ endforeach()
+ ##set(PROTOBUF_IMPORT_DIRS "/usr/include/gazebo-1.9/msgs")
+set (msgs custom_pose_request.proto ${PROTOBUF_IMPORT_DIRS}/vector3d.proto ${PROTOBUF_IMPORT_DIRS}/quaternion.proto ${PROTOBUF_IMPORT_DIRS}/pose.proto ${PROTOBUF_IMPORT_DIRS}/header.proto ${PROTOBUF_IMPORT_DIRS}/time.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
+add_library(custom_pose_message SHARED ${PROTO_SRCS})
+target_link_libraries(custom_pose_message ${PROTOBUF_LIBRARY})

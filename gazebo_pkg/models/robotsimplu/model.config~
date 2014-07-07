@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<model>
+  <name>Box</name>
+  <version>1.0</version>
+  <sdf version="1.4">sherpa_rover.urdf</sdf>
+
+  <author>
+    <name>a</name>
+    <email>a</email>
+  </author>
+
+  <description>
+    A
+  </description>
+</model>

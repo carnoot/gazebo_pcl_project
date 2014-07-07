@@ -1,0 +1,16 @@
+<?xml version='1.0'?>
+
+<model>
+  <name>box</name>
+  <version>1.0</version>
+  <sdf>cylinder.sdf</sdf>
+
+  <author>
+    <name>furdek</name>
+    <email>balint_55@yahoo.com</email>
+  </author>
+
+  <description>
+    A simple Cylinder.
+  </description>
+</model>

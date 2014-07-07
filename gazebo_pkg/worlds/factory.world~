@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    
+    <include>
+      <uri>model://kitchen_final</uri>
+    </include>	
+
+   <plugin name="ros_get_coord" filename="libros_get_coord.so"/>
+
+  </world>
+</sdf>

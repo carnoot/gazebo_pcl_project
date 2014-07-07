@@ -1,0 +1,7 @@
+string object
+string customText
+string customFont
+int16 customFontSize
+float32[4] customColor
+---
+bool ans

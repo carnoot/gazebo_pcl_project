@@ -1,0 +1,9 @@
+<launch>
+
+  <!-- Load joint controller configurations from YAML file to parameter server -->
+<param name="robot_description" textfile="$(find gazebo_pkg)/models/robot_test/my_robot.urdf" />
+
+  <rosparam file="$(find gazebo_pkg)/config/test_control.yaml" command="load"/>
+<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model foo2" />
+
+</launch>

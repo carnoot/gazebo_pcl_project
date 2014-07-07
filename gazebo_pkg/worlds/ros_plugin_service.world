@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+  <world name="default">
+    <plugin name="ros_plugin_service" filename="libros_plugin_service.so"/>
+  </world>
+</sdf>

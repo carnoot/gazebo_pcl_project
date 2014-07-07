@@ -1,0 +1,504 @@
+<robot name="sherpa_rover11">
+  <link name="base_link">
+    <!--MAIN_BODY-->
+    <visual>
+      <origin xyz="0.004205834120512009 -8.124277428578353e-08 0.4054466485977173" rpy="0 0 0" />
+      <geometry>
+	<mesh filename="package://sherpa_rover_description/meshes/Body.dae"/>
+      </geometry>
+    </visual>
+    <!--BOX-->
+    <!--TODO make this stand alone-->
+    <visual>
+      <origin xyz="0.08009205758571625 -1.417444082107977e-07 0.7942018508911133" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Box.dae"/>
+      </geometry>
+    </visual>
+    <!--LEFT_CHAINS-->
+    <visual>
+      <origin xyz="0.16442573070526123 0.3477001190185547 0.14229679107666016" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Main_Wheel.dae"/>
+      </geometry>
+    </visual>
+    <!--RIGHT_CHAINS-->
+    <visual>
+      <origin xyz="0.16442573070526123 -0.3477001190185547 0.14229679107666016" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Main_Wheel.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Full_Body_Col.dae"/>
+      </geometry>
+        <origin xyz="0.004205834120512009 -8.124277428578353e-08 0.4054466485977173" rpy="0 0 0" />
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="100"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  
+  
+  <!-- ARM-LINKS -->
+  <link name="arm_base">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Base.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Base_Col.dae"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="arm_lower">
+      <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Part_1.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Part_1_Col.dae"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="arm_upper">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Part_2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Part_2_Col.dae"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.5"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="arm_gripper">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Gripper.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Arm_Gripper_Col.dae"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+
+  <!-- ARM JOINTS-->
+  <joint name="arm_body_to_base" type="fixed">
+    <parent link="base_link"/>
+    <child link="arm_base"/>
+    
+      <origin xyz="0.39818906784057617 0.0 0.4064980745315552" rpy="0 0 0" />
+  </joint>    
+  
+  <joint name="arm_base_to_lower" type="revolute">
+    <parent link="arm_base"/>
+    <child link="arm_lower"/>
+    <origin xyz="0.1376338005065918 0.0 0.00036263465881347656" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 1 0"/>
+    <limit effort="30" velocity="1.0" lower="-0.8" upper="0.4" />  
+  </joint>    
+  
+  <joint name="arm_lower_to_upper" type="revolute">
+    <parent link="arm_lower"/>
+    <child link="arm_upper"/>
+    <!--origin xyz="0.3876638412475586 0.0 0.4721604585647583" rpy="0.0 0.0 0.0" /-->
+    <origin xyz="0.6097101252698125 0.0 0.03837076473520801" rpy="0.0 0.0 0.0" />
+    
+      <!--origin xyz="0.5252976417541504 0.0 0.4721604585647583" rpy="0.0 -0.77430634573102 0.0" /-->
+    <axis xyz="0 1 0"/>
+    <limit effort="30" velocity="1.0" lower="-2" upper="2" />
+  </joint>    
+  
+  <joint name="arm_upper_to_gripper" type="revolute">
+    <parent link="arm_upper"/>
+    <child link="arm_gripper"/>
+    <origin xyz="0.5056173275473129 0.0 0.005" rpy="0.0 0.0 0.0" />
+    <axis xyz="0 1 0"/>
+    <limit effort="30" velocity="1.0" lower="-1.6" upper="1.6" />
+  </joint>    
+  
+  
+  <!--CHAINS-LINKS-->
+  <link name="chains_loose_front_left">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="3.1415939331054688 0.0 0.0 " />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel_Col.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="3.1415939331054688 0.0 0.0 " />
+    </collision>
+    <inertial>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  
+  <link name="chains_loose_front_right">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel_Col.dae"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="chains_loose_back_left">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="3.1415939331054688 3.1415939331054688 0.0" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel_Col.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="3.1415939331054688 3.1415939331054688 0.0" />
+    </collision>
+    <inertial>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  <link name="chains_loose_back_right">
+    <visual>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 3.1415939331054688 0.0" />
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://sherpa_rover_description/meshes/Loose_Wheel_Col.dae"/>
+      </geometry>
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 3.1415939331054688 0.0" />
+    </collision>
+    <inertial>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+      <mass value="1"/>
+      <inertia 
+        ixx="1.0" ixy="0.0" ixz="0.0" 
+        iyy="1.0" iyz="0.0" 
+        izz="1.0"/>
+    </inertial>
+  </link>
+  
+  
+  
+  <link name="ray_link_left">
+    <inertial>
+      <mass value="0.001"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.000000017" ixy="0" ixz="0" iyy="0.000000017" iyz="0" izz="0.000000017"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <!--<box size="0.01 0.01 0.01" /> -->
+        <mesh filename="package://hector_sensors_description/meshes/sonar_sensor/max_sonar_ez4.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  
+  <link name="ray_link_right">
+    <inertial>
+      <mass value="0.001"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="0.000000017" ixy="0" ixz="0" iyy="0.000000017" iyz="0" izz="0.000000017"/>
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <!--<box size="0.01 0.01 0.01" /> -->
+        <mesh filename="package://hector_sensors_description/meshes/sonar_sensor/max_sonar_ez4.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  
+  <joint name="ray_joint_left" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.023 0.0018 0.0012"/>
+    <parent link="base_link"/>
+    <child link="ray_link_left"/>
+  </joint>
+  
+  <joint name="ray_joint_right" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.023 -0.0018 0.0012"/>
+    <parent link="base_link"/>
+    <child link="ray_link_right"/>
+  </joint>
+  <!--CHAINS-JOINTS-->
+  
+  <joint name="chains_body_to_fl" type="fixed">
+    <parent link="base_link"/>
+    <child link="chains_loose_front_left"/>
+      <origin xyz="0.6964254379272461 0.5033063888549805 0.1422966718673706" rpy="0 0 0" />
+    
+    <axis xyz="0 1 0"/>
+  </joint>    
+  
+  <joint name="chains_body_to_fr" type="fixed">
+    <parent link="base_link"/>
+    <child link="chains_loose_front_right"/>
+      <origin xyz="0.6964254379272461 -0.5033063888549805 0.1422966718673706" rpy="0 0 0" />
+    
+    <axis xyz="0 1 0"/>
+  </joint>    
+  <joint name="chains_body_to_bl" type="fixed">
+    <parent link="base_link"/>
+    <child link="chains_loose_back_left"/>
+    
+    <origin xyz="-0.34882116317749023 0.5033063888549805 0.1422966718673706" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 1 0"/>
+  </joint>    
+  
+  <joint name="chains_body_to_br" type="fixed">
+    <parent link="base_link"/>
+    <child link="chains_loose_back_right"/>
+    
+    <origin xyz="-0.34882116317749023 -0.5033063888549805 0.1422966718673706" rpy="0.0 0.0 0.0" />
+      <axis xyz="0 1 0"/>
+  </joint>    
+  
+  <link name="kinect_link_right">
+    <visual>
+        <geometry>
+        <box size="0.064 0.121 0.0381" />
+        </geometry>
+        <material name="Blue" />
+    </visual>
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+
+    <joint name="kinect_depth_joint_right" type="fixed">
+    <origin xyz="0 0.028 0" rpy="0 0 0" />
+    <parent link="kinect_link_right" />
+    <child link="kinect_depth_frame_right" />
+    </joint>
+
+    <link name="kinect_depth_frame_right">
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+
+    <joint name="depth_optical_joint_right" type="fixed">
+    <origin xyz="0 0 0" rpy="1.72 0 1.72" />
+    <parent link="kinect_depth_frame_right" />
+    <child link="kinect_depth_optical_frame_right" />
+    </joint>
+
+    <link name="kinect_depth_optical_frame_right">
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+    
+    
+  
+  <link name="kinect_link_left">
+    <visual>
+        <geometry>
+        <box size="0.064 0.121 0.0381" />
+        </geometry>
+        <material name="Blue" />
+    </visual>
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+
+    <joint name="kinect_depth_joint_left" type="fixed">
+    <origin xyz="0 0.028 0" rpy="0 0 0" />
+    <parent link="kinect_link_left" />
+    <child link="kinect_depth_frame_left" />
+    </joint>
+
+    <link name="kinect_depth_frame_left">
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+
+    <joint name="depth_optical_joint_left" type="fixed">
+    <origin xyz="0 0 0" rpy="1.72 0 1.72" />
+    <parent link="kinect_depth_frame_left" />
+    <child link="kinect_depth_optical_frame_left" />
+    </joint>
+
+    <link name="kinect_depth_optical_frame_left">
+    <inertial>
+        <mass value="0.0001" />
+        <origin xyz="0 0 0" />
+        <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                iyy="0.0001" iyz="0.0" 
+                izz="0.0001" />
+    </inertial>
+    </link>
+  
+    
+    <joint name="kinect_joint_left" type="fixed">
+        <origin xyz="-0.34882116317749023 -0.5033063888549805 0.1422966718673706" rpy="1.72 0 1.72"/>
+        <parent link="base_link"/>
+        <child link="kinect_link_left"/>
+    </joint>
+    
+    
+    <joint name="kinect_joint_right" type="fixed">
+        <origin xyz="-0.34882116317749023 0.5033063888549805 0.1422966718673706" rpy="1.72 0 1.72"/>
+        <parent link="base_link"/>
+        <child link="kinect_link_right"/>
+    </joint>
+  <transmission name="arm1">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm_base_to_lower"/>
+      <actuator name="motor1">
+          <hardwareInterface>EffortJointInterface</hardwareInterface>
+           <mechanicalReduction>1</mechanicalReduction>
+       </actuator>
+  </transmission>
+  
+  <transmission name="arm2">
+      
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm_lower_to_upper"/>
+      <actuator name="motor2">
+          <hardwareInterface>EffortJointInterface</hardwareInterface>
+           <mechanicalReduction>1</mechanicalReduction>
+           </actuator>
+  </transmission>
+  
+  <transmission name="arm3">
+      
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="arm_upper_to_gripper"/>
+      <actuator name="motor3">
+          <hardwareInterface>EffortJointInterface</hardwareInterface>
+           <mechanicalReduction>1</mechanicalReduction>
+           </actuator>
+  </transmission>
+  
+  
+    
+  <gazebo>
+        <plugin name="rover_ros_control" filename="libgazebo_ros_control.so">
+             <robotParam>sherpa_rover/robot_description</robotParam>
+             <robotNamespace>/sherpa_rover</robotNamespace>
+             <controlPeriod>0.001</controlPeriod>
+         </plugin>
+    <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
+      <commandTopic>cmd_vel</commandTopic>
+      <odometryTopic>odom</odometryTopic>
+      <odometryFrame>odom</odometryFrame>
+      <odometryRate>20.0</odometryRate>
+      <robotBaseFrame>base_link</robotBaseFrame>
+    </plugin>
+  </gazebo>
+  
+  
+</robot>

@@ -1,0 +1,14 @@
+package custom_pose_message.msgs;
+import "pose.proto";
+
+message CustomPoseRequest
+{
+required double rot_w = 1;
+required double rot_x = 2;
+required double rot_y = 3;
+required double rot_z = 4;
+
+required double pos_x = 5;
+required double pos_y = 6;
+required double pos_z = 7;
+}

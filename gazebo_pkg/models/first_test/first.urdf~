@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<robot name="myfirst">
+ <model name ='myfirst'>
+  <link name="base_link">
+
+    <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.2</radius><length>0.6</length></cylinder>
+            </cylinder>
+          </geometry>
+        </collision>
+
+
+    <visual name="visual">
+      <geometry>
+        <cylinder length="0.6" radius="0.2"/>
+      </geometry>
+    </visual>
+
+
+  </link>
+</robot>

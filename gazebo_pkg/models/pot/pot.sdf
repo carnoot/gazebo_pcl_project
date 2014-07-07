@@ -1,0 +1,70 @@
+<sdf version="1.4">
+    <model name="pot">
+        <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+        <link name="pot_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            <inertial>
+                <pose>-0.004000 0.002000 0.076000 0.000000 -0.000000 0.000000</pose>
+                <inertia>
+                    <ixx>0.0001</ixx>
+                    <ixy>0.000000</ixy>
+                    <ixz>0.000000</ixz>
+                    <iyy>0.0001</iyy>
+                    <iyz>0.000000</iyz>
+                    <izz>0.0001</izz>
+                </inertia>
+                <mass>0.05</mass>
+            </inertial>
+            <collision name="pot_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://pot/meshes/pot.stl</uri>
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                <surface>
+                    <friction>
+                        <ode>
+                            <mu>0.7000000</mu>
+                            <mu2>0.7000000</mu2>
+                            <fdir1>0.000000 0.000000 0.000000</fdir1>
+                            <slip1>0.000000</slip1>
+                            <slip2>0.000000</slip2>
+                        </ode>
+                    </friction>
+                    <bounce>
+                        <restitution_coefficient>0.000000</restitution_coefficient>
+                        <threshold>100000.000000</threshold>
+                    </bounce>
+                    <contact>
+                        <ode>
+                            <soft_cfm>0.0</soft_cfm>
+                            <soft_erp>0.2</soft_erp>
+                            <kp>1000000000000.0</kp>
+                            <kd>1000000000000.0</kd>
+                            <max_vel>100.000000</max_vel>
+                            <min_depth>0.001000</min_depth>
+                        </ode>
+                    </contact>
+                </surface>
+                <laser_retro>0.000000</laser_retro>
+            </collision>
+            <visual name="pot_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://pot/meshes/pot.dae</uri>
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                <cast_shadows>1</cast_shadows>
+                <laser_retro>0.000000</laser_retro>
+                <transparency>0.000000</transparency>
+            </visual>
+            <gravity>1</gravity>
+            <self_collide>0</self_collide>
+            <kinematic>0</kinematic>
+        </link>
+    </model>
+</sdf>
