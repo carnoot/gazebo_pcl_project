@@ -5,6 +5,7 @@ using namespace gazebo;
 MoveKinectCameraPlugin::MoveKinectCameraPlugin() {
 	this->initService();
 	this->added = true;
+	this->test_bool = true;
 }
 
 MoveKinectCameraPlugin::~MoveKinectCameraPlugin() {
@@ -326,6 +327,25 @@ void MoveKinectCameraPlugin::OnUpdate() {
 		}
 		this->added = false;
 //		this->cameraVisual->AttachAxes();
+	}
+
+	if (this->present == true && this->added == false){
+//		std::cerr << "NOW" << std::endl;
+		if (this->test_bool){
+		gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
+						*new math::Vector3(-3.984, -4.672, 4), this->visualVect);
+		this->test_bool = false;
+		}
+		this->cameraVisual->GetSceneNode()->lookAt(*new Ogre::Vector3(-3.984, -4.672,0), Ogre::Node::TS_WORLD, Ogre::Vector3::UNIT_X); // MUKODIK EZ A FOS
+		std::cout << this->cameraVisual->GetSceneNode()->getOrientation() << std::endl;
+
+//		std::cout << this->model->GetName() << std::endl;
+//		std::cout << this->cameraVisual->GetName() << std::endl;
+//		kinect::camera_link::camera_link_visual
+
+//		for (int j = 0; j < this->visualVect.size(); j++) {
+//					std::cout << this->visualVect[j]->GetName() << std::endl;
+//				}
 	}
 }
 

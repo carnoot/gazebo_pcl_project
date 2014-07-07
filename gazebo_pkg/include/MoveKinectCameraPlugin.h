@@ -100,6 +100,7 @@ private:
 	bool anim;
 	bool published;
 	bool added;
+	bool test_bool;
 
 
 	ros::ServiceServer service;

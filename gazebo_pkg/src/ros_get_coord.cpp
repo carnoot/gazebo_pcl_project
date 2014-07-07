@@ -17,6 +17,13 @@ RosGetCoord::RosGetCoord() {
 
 }
 
+void RosGetCoord::OnUpdate(){
+
+	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
+//	this->parent->GetModel(2)->GetBoundingBox()
+
+}
+
 bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 		gazebo_pkg::GetObject::Response &res) {
 
@@ -42,6 +49,9 @@ bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 void RosGetCoord::Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf) {
 
 	this->parent = _parent;
+
+	this->updateConnection = event::Events::ConnectWorldUpdateBegin(
+				boost::bind(&RosGetCoord::OnUpdate, this));
 
 	this->spinner = new ros::AsyncSpinner(1);
 	this->spinner->start();

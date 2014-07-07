@@ -89,13 +89,15 @@ catkin_package(
 )
 
 ## HACK PENTRU QT ( DE LA FERKO ) ##
-#execute_process(COMMAND find ${PROJECT_SOURCE_DIR}  -path #"${PROJECT_SOURCE_DIR}/include/*" -name "*.h*" -or -name "*.cpp" #OUTPUT_VARIABLE RS_FILES_STRING)
-# #cmake string to list; has to be done because otherwise #add_custom_target would handle    RS_FILES_STRING as one single #file, which leads to an error
-# string(REPLACE "\n" ";" RS_FILES_LIST ${RS_FILES_STRING})
-# add_custom_target(project_additional_files
-#   SOURCES
-#   ${RS_FILES_LIST}
-# )
+execute_process(COMMAND find ${PROJECT_SOURCE_DIR}  -path "${PROJECT_SOURCE_DIR}/include/*" -name "*.h*" -or -name "*.cpp" OUTPUT_VARIABLE RS_FILES_STRING)
+ #cmake string to list; has to be done because otherwise #add_custom_target would handle    RS_FILES_STRING as one single #file, which leads to an error
+ string(REPLACE "\n" ";" RS_FILES_LIST ${RS_FILES_STRING})
+ add_custom_target(project_additional_files
+   SOURCES
+   ${RS_FILES_LIST}
+ )
+
+file(GLOB SOURCES ~/catkin_ws/src/gazebo_ros_pkgs/gazebo_plugins/src/gazebo_ros_openni_kinect_test.cpp)
 
 ## Declare a cpp executable
 #add_library(test_plugin src/test_plugin.cpp)
@@ -103,9 +105,9 @@ catkin_package(
 #add_library(factory src/factory.cpp)
 #add_library(world_edit src/world_edit.cpp)
 #add_library(system_gui src/system_gui.cpp)
-#add_library(ros_plugin src/ros_plugin.cpp)
+add_library(ros_plugin src/ros_plugin.cpp)
 #add_library(ros_plugin_service src/ros_plugin_service.cpp)
-#add_library(ros_get_coord src/ros_get_coord.cpp)
+add_library(ros_get_coord src/ros_get_coord.cpp)
 #add_library(DynamicJoint SHARED src/DynamicJoint.cpp)
 #add_library(VisualPluginTest src/VisualPluginTest.cpp)
 #add_library(DrawLinesPlugin src/DrawLinesPlugin.cpp)
@@ -133,9 +135,9 @@ add_library(KitchenFinalPlugin src/KitchenFinalPlugin.cpp)
 #target_link_libraries(factory ${catkin_LIBRARIES})
 #target_link_libraries(world_edit ${catkin_LIBRARIES})
 #target_link_libraries(system_gui ${catkin_LIBRARIES} ${OGRE_LIBRARIES})
-#target_link_libraries(ros_plugin ${catkin_LIBRARIES})
+target_link_libraries(ros_plugin ${catkin_LIBRARIES})
 #target_link_libraries(ros_plugin_service ${catkin_LIBRARIES})
-#target_link_libraries(ros_get_coord ${catkin_LIBRARIES})
+target_link_libraries(ros_get_coord ${catkin_LIBRARIES})
 #target_link_libraries(DynamicJoint ${catkin_LIBRARIES})
 #target_link_libraries(VisualPluginTest ${catkin_LIBRARIES})
 #target_link_libraries(DrawLinesPlugin ${catkin_LIBRARIES} ${OGRE_LIBRARIES})
@@ -161,8 +163,8 @@ target_link_libraries(gazebo_ros_openni_kinect_test ${catkin_LIBRARIES})
 #add_executable(add_coord_client src/add_coord_client.cpp)
 #target_link_libraries(add_coord_client ${catkin_LIBRARIES})
 
-#add_executable(add_object_client src/add_object_client.cpp)
-#target_link_libraries(add_object_client ${catkin_LIBRARIES})
+add_executable(add_object_client src/add_object_client.cpp)
+target_link_libraries(add_object_client ${catkin_LIBRARIES})
 
 add_executable(add_text_client src/add_text_client.cpp)
 target_link_libraries(add_text_client ${catkin_LIBRARIES})
@@ -227,4 +229,3 @@ target_link_libraries(EuclideanClusterCategorizer stlWriter ${catkin_LIBRARIES} 
 add_library(stl_loader src/stl_loader.cpp)
 add_executable(stl_to_mesh src/stl_to_mesh.cpp)
 target_link_libraries(stl_to_mesh stl_loader ${catkin_LIBRARIES} ${OGRE_LIBRARIES} ${Boost_LIBRARIES})
-

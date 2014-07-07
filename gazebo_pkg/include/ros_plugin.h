@@ -16,6 +16,10 @@ public: RosPlugin();
 
 	/// \The Load Method
 public: void Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf);
+		void OnUpdate();
+
+public: event::ConnectionPtr updateConnection;
+		physics::WorldPtr parent;
 
 };
 

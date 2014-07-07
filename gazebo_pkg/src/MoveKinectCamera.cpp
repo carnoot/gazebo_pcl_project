@@ -4,7 +4,9 @@ using namespace gazebo;
 
 MoveCamera::MoveCamera() {
 
-	std::cout << "CONSTRUCTOR" << std::endl;
+//	std::cout << "CONSTRUCTOR" << std::endl;
+
+	ROS_INFO("CONSTRUCTOR OF MoveCamera");
 
 	this->i = 0;
 
@@ -157,17 +159,10 @@ void MoveCamera::FetchRealKinectPose() {
 
 	const tf::Vector3 *myVect = new tf::Vector3(0.534, 0.322, 1.760);
 	myQuatt.SetFromEuler(-1.530, -0.006, 1.533);
+
 	this->transform.setOrigin(*myVect);
 	this->transform.setRotation(
 			*new tf::Quaternion(myQuatt.x, myQuatt.y, myQuatt.z, myQuatt.w));
-//	std::cout << "GET ORIGIN Y: " << this->transform.getOrigin().y()
-//			<< std::endl;
-
-//	std::cout << "X: " << this->newPos.pos.x << "Y: " << this->newPos.pos.y
-//			<< "Z: " << this->newPos.pos.z << std::endl;
-
-//	this->transform.setRotation(
-//			*new tf::Quaternion(0.757, -0.500, 0.231, -0.352));
 
 //	try {
 //		this->listener.waitForTransform(this->tfFixedFrameName,
@@ -304,10 +299,18 @@ void MoveCamera::SetCameraPosition() {
 	std::cout << myQuat->w << " " << myQuat->x << " " << myQuat->y << " "
 			<< myQuat->z << std::endl;
 
-	this->newPos.rot.w = this->finalQuaternion.w;
-	this->newPos.rot.x = -this->finalQuaternion.z;
-	this->newPos.rot.y = -this->finalQuaternion.x;
-	this->newPos.rot.z = this->finalQuaternion.y;
+
+	// UN-COMMENT //
+//	this->newPos.rot.w = this->finalQuaternion.w;
+//	this->newPos.rot.x = -this->finalQuaternion.z;
+//	this->newPos.rot.y = -this->finalQuaternion.x;
+//	this->newPos.rot.z = this->finalQuaternion.y;
+	// UN-COMMENT //
+
+	this->newPos.rot.w = 0.6928;
+	this->newPos.rot.x = 0.0;
+	this->newPos.rot.y = 0.721;
+	this->newPos.rot.z = 0.0;
 
 //	this->newPos.rot.w = this->finalQuaternion.w;
 //	this->newPos.rot.x = this->finalQuaternion.x;
@@ -426,9 +429,12 @@ void MoveCamera::OnUpdate() {
 		std::cout << "Executing" << std::endl;
 		this->FetchRealKinectPose();
 		this->SubtractQuaternionAngles();
-//		this->PrintTransformPose();
+//		this->PrintTransformPose(); // doar print ramane comentat
 		this->SetCameraPosition();
-//		this->PrintCameraPose();
+//		this->PrintCameraPose(); // doar print ramane comentat
+
+//		this->newPos.pos.x = this->newPos.pos.z + 0.01;
+//		this->model->SetWorldPose(this->newPos);
 	}
 
 }

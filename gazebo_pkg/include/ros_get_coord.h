@@ -43,12 +43,14 @@ public:
 	std::vector<float> QuaternionToEuler(float w, float x,
 			float y, float z);
 	std::string ConvertFloat(float a);
+	void OnUpdate();
 
 public:
 	ros::AsyncSpinner *spinner;
 
 public:
 	ros::ServiceServer service;
+	event::ConnectionPtr updateConnection;
 
 private:
 	bool primit_coord;

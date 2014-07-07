@@ -11,12 +11,22 @@ using namespace gazebo;
 		//ros::NodeHandle n;
 		//ros::ServiceClient client = n.serviceClient("client");
 
-		ROS_INFO("Merge constructorul, asa ca e in regula!");
+//		ROS_INFO("Merge constructorul, asa ca e in regula!");
+
+	}
+
+	void RosPlugin::OnUpdate(){
+
+		std::cerr << "$$$$$$$$$$$$$$$$$$$$$ COUNT : " << this->parent->GetModelCount() << " $$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 
 	}
 
     void RosPlugin::Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf)
     {
+    	std::cerr << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+    	this->parent = _parent;
+
+    	this->updateConnection = event::Events::ConnectWorldUpdateBegin(boost::bind(&RosPlugin::OnUpdate, this));
 
     }
 

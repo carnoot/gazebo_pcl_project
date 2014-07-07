@@ -44,10 +44,13 @@ void OgreTest::Init() {
 	int argc = 0;
 	char ** argv = NULL;
 
-	ResourceGroupManager::getSingletonPtr()->addResourceLocation("/home/furdek","FileSystem");
+	ResourceGroupManager::getSingletonPtr()->addResourceLocation("/home/furdek",
+			"FileSystem");
 	ResourceGroupManager::getSingletonPtr()->initialiseAllResourceGroups();
 	Entity* e = this->sceneManager->createEntity("stl1.mesh");
-	SceneNode* my_node = this->sceneManager->getRootSceneNode()->createChildSceneNode("my_scene_node");
+	SceneNode* my_node =
+			this->sceneManager->getRootSceneNode()->createChildSceneNode(
+					"my_scene_node");
 	my_node->setPosition(*pozvect);
 	my_node->setVisible(true);
 	my_node->attachObject(e);
