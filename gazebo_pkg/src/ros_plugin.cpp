@@ -17,7 +17,7 @@ using namespace gazebo;
 
 	void RosPlugin::OnUpdate(){
 
-		std::cerr << "$$$$$$$$$$$$$$$$$$$$$ COUNT : " << this->parent->GetModelCount() << " $$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
+//		std::cerr << "$$$$$$$$$$$$$$$$$$$$$ COUNT : " << this->parent->GetModelCount() << " $$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 
 	}
 

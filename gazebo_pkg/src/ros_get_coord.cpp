@@ -19,7 +19,7 @@ RosGetCoord::RosGetCoord() {
 
 void RosGetCoord::OnUpdate(){
 
-	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
+//	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
 //	this->parent->GetModel(2)->GetBoundingBox()
 
 }

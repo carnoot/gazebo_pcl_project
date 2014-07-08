@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "ros/ros.h"
 #include "/opt/ros/hydro/include/tf/transform_listener.h"
+#include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
 
 namespace gazebo {
 
@@ -38,7 +39,7 @@ public:
 	void TransformEulerToRotation();
 	void SubtractQuaternionAngles();
 	void SetTransformQuaternion();
-//	void SetNewOrientation(customPosePtr);
+	void SetNewOrientation(const boost::shared_ptr<const custom_pose_message::msgs::CustomPoseRequest> &);
 
 // Pointer to the model
 private:
@@ -79,6 +80,13 @@ private:
 	double rotationX;
 	double rotationY;
 	double rotationZ;
+	double look_at_pos_x;
+	double look_at_pos_y;
+	double look_at_pos_z;
+	double look_at_w;
+	double look_at_x;
+	double look_at_y;
+	double look_at_z;
 	math::Pose newPos;
 	math::Pose probaPos;
 	math::Quaternion rotationQuaternion;
@@ -97,7 +105,10 @@ private:
 public:
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;
+	transport::NodePtr senderNode;
 	transport::SubscriberPtr subscriber;
+	transport::PublisherPtr publisher;
+	custom_pose_message::msgs::CustomPoseRequest msgToSend;
 
 };
 

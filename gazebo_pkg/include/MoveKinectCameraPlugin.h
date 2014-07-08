@@ -47,6 +47,7 @@ public:
 	void CalcAndPublishNextPoint();
 	bool getTextParam(gazebo_pkg::GetTextParam::Request &req,
 			gazebo_pkg::GetTextParam::Response &res);
+	void setCameraPosition(const boost::shared_ptr<const custom_pose_message::msgs::CustomPoseRequest> &);
 	void initService();
 
 	// Pointer to the model
@@ -72,15 +73,18 @@ private:
 	//Ogre::SceneManager::AnimationList *animList;
 	Ogre::Animation *cameraAnimation;
 	Ogre::AnimationState *cameraAnimationState;
+	int i, j, k;
 	double x, y, z;
 	double x_offset, y_offset, z_offset;
 	double fi, teta;
 	double r;
-	int i, j, k;
 	double stepSize;
 	double rotationAngle;
 	double rotationStepSize;
 	double tolerance;
+	double camera_pos_x;
+	double camera_pos_y;
+	double camera_pos_z;
 	math::Pose newPos;
 	math::Matrix3 yRotationMatrix;
 	math::Matrix3 xRotationMatrix;
@@ -93,7 +97,9 @@ private:
 	math::Matrix3 testMatrix2;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr senderNode;
+	transport::NodePtr receiveNode;
 	transport::PublisherPtr publisher;
+	transport::SubscriberPtr subscriber;
 	custom_pose_message::msgs::CustomPoseRequest msgToSend;
 	bool called;
 	bool present;

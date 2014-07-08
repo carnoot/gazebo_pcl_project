@@ -71,22 +71,42 @@ void MoveKinectCameraPlugin::Init() {
 
 	//this->mapIter = this->sceneManager->getCameras().begin();
 
-//	std::cout << "before senderNode INIT" << std::endl;
+	std::cout << "before senderNode INIT" << std::endl;
 
-//	this->senderNode = transport::NodePtr(new transport::Node());
-//	this->senderNode->Init("firstSender");
-//	transport::run();
-//
-//	std::cout << "WAITING" << std::endl;
-//
-//	this->publisher = this->senderNode->Advertise<
-//			custom_pose_message::msgs::CustomPoseRequest>("customOrientation");
-//
-//	this->publisher->WaitForConnection();
-//
-//	std::cout << "SUBSCRIBER CONNECTED" << std::endl;
+	this->senderNode = transport::NodePtr(new transport::Node());
+	this->senderNode->Init("MoveKinectCameraPluginSender");
+	transport::run();
 
-	std::cout << "INIT END" << std::endl;
+	std::cout << "MoveKinectCameraPlugin WAITING for Connection!" << std::endl;
+
+	this->publisher = this->senderNode->Advertise<
+			custom_pose_message::msgs::CustomPoseRequest>("customOrientation");
+
+	this->publisher->WaitForConnection();
+
+	std::cout << "MoveKinectCameraPlugin Connection Ready!" << std::endl;
+
+	sleep(5);
+
+	this->receiveNode = transport::NodePtr(new transport::Node());
+	this->receiveNode->Init("MoveKinectCameraPluginReceiver");
+
+	this->subscriber = this->receiveNode->Subscribe("customPosition",
+			&MoveKinectCameraPlugin::setCameraPosition, this);
+
+}
+
+void MoveKinectCameraPlugin::setCameraPosition(
+		const boost::shared_ptr<
+				const custom_pose_message::msgs::CustomPoseRequest> & pose_msg) {
+
+	this->camera_pos_x = pose_msg->pos_x();
+	this->camera_pos_y = pose_msg->pos_y();
+	this->camera_pos_z = pose_msg->pos_z();
+
+	std::cout << "RECEIVED X = " << pose_msg->pos_x() << std::endl;
+	std::cout << "RECEIVED Y = " << pose_msg->pos_y() << std::endl;
+	std::cout << "RECEIVED Z = " << pose_msg->pos_z() << std::endl;
 
 }
 
@@ -277,13 +297,14 @@ void MoveKinectCameraPlugin::OnUpdate() {
 			this->cameraVisual =
 					gui::get_active_camera()->GetScene()->GetVisual(
 							this->cameraLinkName);
-		this->arrowVisPtr = gui::get_active_camera()->GetScene()->GetVisual(
-				"box1::link::visual");
+//		std::cout << "ARROW VIS PTR" << std::endl;
+//		this->arrowVisPtr = gui::get_active_camera()->GetScene()->GetVisual(
+//				"box1::link::visual");
 		//gui::get_active_camera()->GetScene()->PrintSceneGraph();
 		std::cout << "InsertingMesh" << std::endl;
-		std::cout << this->arrowVisPtr->GetName() << std::endl;
-		this->arrowVisPtr->InsertMesh("axis_shaft");
-		std::cout << "InsertingMeshEND" << std::endl;
+//		std::cout << this->arrowVisPtr->GetName() << std::endl;
+//		this->arrowVisPtr->InsertMesh("axis_shaft");
+//		std::cout << "InsertingMeshEND" << std::endl;
 		this->present = true;
 	}
 
@@ -329,15 +350,38 @@ void MoveKinectCameraPlugin::OnUpdate() {
 //		this->cameraVisual->AttachAxes();
 	}
 
-	if (this->present == true && this->added == false){
+	if (this->present == true && this->added == false) {
 //		std::cerr << "NOW" << std::endl;
-		if (this->test_bool){
-		gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
-						*new math::Vector3(-3.984, -4.672, 4), this->visualVect);
-		this->test_bool = false;
+		if (this->test_bool) {
+			gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
+					*new math::Vector3(-3.984, -4.672, 4), this->visualVect);
+			this->test_bool = false;
 		}
-		this->cameraVisual->GetSceneNode()->lookAt(*new Ogre::Vector3(-3.984, -4.672,0), Ogre::Node::TS_WORLD, Ogre::Vector3::UNIT_X); // MUKODIK EZ A FOS
-		std::cout << this->cameraVisual->GetSceneNode()->getOrientation() << std::endl;
+
+		this->cameraVisual->GetSceneNode()->lookAt(
+				*new Ogre::Vector3(-3.984, -4.672, 0), Ogre::Node::TS_WORLD,
+				Ogre::Vector3::UNIT_X); // MUKODIK EZ A FOS
+
+//		std::cout << this->cameraVisual->GetSceneNode()->getOrientation()
+//				<< std::endl;
+
+		this->msgToSend.set_pos_x(
+				this->cameraVisual->GetSceneNode()->getPosition().x);
+		this->msgToSend.set_pos_y(
+				this->cameraVisual->GetSceneNode()->getPosition().y);
+		this->msgToSend.set_pos_z(
+				this->cameraVisual->GetSceneNode()->getPosition().z);
+
+		this->msgToSend.set_rot_w(
+				this->cameraVisual->GetSceneNode()->getOrientation().w);
+		this->msgToSend.set_rot_x(
+				this->cameraVisual->GetSceneNode()->getOrientation().x);
+		this->msgToSend.set_rot_y(
+				this->cameraVisual->GetSceneNode()->getOrientation().y);
+		this->msgToSend.set_rot_z(
+				this->cameraVisual->GetSceneNode()->getOrientation().z);
+
+		this->publisher->Publish(this->msgToSend);
 
 //		std::cout << this->model->GetName() << std::endl;
 //		std::cout << this->cameraVisual->GetName() << std::endl;

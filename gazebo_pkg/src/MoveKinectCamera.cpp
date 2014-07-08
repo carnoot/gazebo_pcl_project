@@ -51,15 +51,36 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 
 	std::cout << "SLEEP" << std::endl;
 
-	sleep(5);
+	sleep(3);
 
 	std::cout << "SUBSCRIBING" << std::endl;
 
-//	this->receiveNode = transport::NodePtr(new transport::Node());
-//	this->receiveNode->Init("firstReceiver");
+	this->receiveNode = transport::NodePtr(new transport::Node());
+	this->receiveNode->Init("MoveKinectCameraReceiver");
 
-//	this->subscriber = this->receiveNode->Subscribe("customOrientation",
-//			&MoveCamera::SetNewOrientation, this);
+	this->subscriber = this->receiveNode->Subscribe("customOrientation",
+			&MoveCamera::SetNewOrientation, this);
+
+	this->senderNode = transport::NodePtr(new transport::Node());
+	this->senderNode->Init("MoveKinectCameraSender");
+	transport::run();
+
+	this->publisher = this->senderNode->Advertise
+			< custom_pose_message::msgs::CustomPoseRequest
+			> ("customPosition");
+
+	std::cout << "MoveKinectCamera WAITING for Connection!" << std::endl;
+	this->publisher->WaitForConnection();
+	std::cout << "MoveKinectCamera Connection Ready!" << std::endl;
+
+	this->msgToSend.set_pos_x(10.0);
+	this->msgToSend.set_pos_y(20.0);
+	this->msgToSend.set_pos_z(30.0);
+
+	this->msgToSend.set_rot_w(1.0);
+	this->msgToSend.set_rot_x(0.0);
+	this->msgToSend.set_rot_y(0.0);
+	this->msgToSend.set_rot_z(0.0);
 
 	this->r = 0.6283; //Pt Stefan 62.83 cm raza pana la obiect
 
@@ -139,6 +160,26 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 
 }
 
+void MoveCamera::SetNewOrientation(
+		const boost::shared_ptr<
+				const custom_pose_message::msgs::CustomPoseRequest>& orientation_msg) {
+
+	this->look_at_pos_x = orientation_msg->pos_x();
+	this->look_at_pos_y = orientation_msg->pos_y();
+	this->look_at_pos_z = orientation_msg->pos_z();
+
+	this->look_at_w = orientation_msg->rot_w();
+	this->look_at_x = orientation_msg->rot_x();
+	this->look_at_y = orientation_msg->rot_y();
+	this->look_at_z = orientation_msg->rot_z();
+
+	std::cout << "RECEIVED W = " << orientation_msg->rot_w() << std::endl;
+	std::cout << "RECEIVED X = " << orientation_msg->rot_x() << std::endl;
+	std::cout << "RECEIVED Y = " << orientation_msg->rot_y() << std::endl;
+	std::cout << "RECEIVED Z = " << orientation_msg->rot_z() << std::endl;
+
+}
+
 void MoveCamera::InitCameraNode() {
 //	this->sceneManager = this->model->GetWorld()->sceneMsg
 
@@ -173,7 +214,7 @@ void MoveCamera::FetchRealKinectPose() {
 //		ROS_ERROR("%s", ex.what());
 //	}
 
-	this->PrintTransformPose();
+//	this->PrintTransformPose();
 
 }
 
@@ -251,18 +292,20 @@ void MoveCamera::SubtractQuaternionAngles() {
 
 	this->finalQuaternion = this->initialQuaternion;
 
-	std::cout << this->finalQuaternion.GetAsEuler().x
-			<< this->finalQuaternion.GetAsEuler().y
-			<< this->finalQuaternion.GetAsEuler().z << std::endl;
+//	std::cout << this->finalQuaternion.GetAsEuler().x
+//			<< this->finalQuaternion.GetAsEuler().y
+//			<< this->finalQuaternion.GetAsEuler().z << std::endl;
 }
 
 void MoveCamera::SetCameraPosition() {
 
-	std::cout << "Setting TF Position" << std::endl;
+//	std::cout << "Setting TF Position" << std::endl;
 
 	math::Quaternion *myQuat;
 
-	this->AdjustPositionToKitchenLink();
+	// ################## IMPORTANT ##################### //
+//	this->AdjustPositionToKitchenLink();
+	// ################## IMPORTANT ##################### //
 
 //	this->TransformRotationToEuler();
 //	this->AdjustRotationToKitchenLink();
@@ -286,9 +329,9 @@ void MoveCamera::SetCameraPosition() {
 //			<< this->finalQuaternion.GetAsEuler().y << " "
 //			<< this->finalQuaternion.GetAsEuler().z << std::endl;
 
-	std::cout << this->finalQuaternion.w << " " << this->finalQuaternion.x
-			<< " " << this->finalQuaternion.y << " " << this->finalQuaternion.z
-			<< std::endl;
+//	std::cout << this->finalQuaternion.w << " " << this->finalQuaternion.x
+//			<< " " << this->finalQuaternion.y << " " << this->finalQuaternion.z
+//			<< std::endl;
 
 	//-Z -X Y in quaternion
 
@@ -296,9 +339,8 @@ void MoveCamera::SetCameraPosition() {
 			this->finalQuaternion.GetAsEuler().x,
 			this->finalQuaternion.GetAsEuler().y);
 
-	std::cout << myQuat->w << " " << myQuat->x << " " << myQuat->y << " "
-			<< myQuat->z << std::endl;
-
+//	std::cout << myQuat->w << " " << myQuat->x << " " << myQuat->y << " "
+//			<< myQuat->z << std::endl;
 
 	// UN-COMMENT //
 //	this->newPos.rot.w = this->finalQuaternion.w;
@@ -307,10 +349,14 @@ void MoveCamera::SetCameraPosition() {
 //	this->newPos.rot.z = this->finalQuaternion.y;
 	// UN-COMMENT //
 
-	this->newPos.rot.w = 0.6928;
-	this->newPos.rot.x = 0.0;
-	this->newPos.rot.y = 0.721;
-	this->newPos.rot.z = 0.0;
+	this->newPos.pos.x = this->look_at_pos_x;
+	this->newPos.pos.y = this->look_at_pos_y;
+	this->newPos.pos.z = this->look_at_pos_z;
+
+	this->newPos.rot.w = this->look_at_w;
+	this->newPos.rot.x = this->look_at_x;
+	this->newPos.rot.y = this->look_at_y;
+	this->newPos.rot.z = this->look_at_z;
 
 //	this->newPos.rot.w = this->finalQuaternion.w;
 //	this->newPos.rot.x = this->finalQuaternion.x;
@@ -328,12 +374,12 @@ void MoveCamera::AdjustPositionToKitchenLink() {
 //			<< this->transform.getOrigin().y() << "Orig Z: "
 //			<< this->transform.getOrigin().z() << std::endl;
 
-	std::cout << "Offset:" << this->kitchen_link_x_offset << ", "
-			<< this->kitchen_link_y_offset << ", "
-			<< this->kitchen_link_z_offset << std::endl;
-
-	std::cout << "newPos BEFORE adjust:" << this->newPos.pos.x << ", "
-			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
+//	std::cout << "Offset:" << this->kitchen_link_x_offset << ", "
+//			<< this->kitchen_link_y_offset << ", "
+//			<< this->kitchen_link_z_offset << std::endl;
+//
+//	std::cout << "newPos BEFORE adjust:" << this->newPos.pos.x << ", "
+//			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
 
 //	this->newPos.pos.x = (-3.45 - this->transform.getOrigin().x());
 //	this->newPos.pos.y = (-4.35 - this->transform.getOrigin().y());
@@ -348,8 +394,8 @@ void MoveCamera::AdjustPositionToKitchenLink() {
 	this->newPos.pos.z = (double) (this->transform.getOrigin().z()
 			+ this->kitchen_link_z_offset);
 
-	std::cout << "newPos AFTER adjust:" << this->newPos.pos.x << ", "
-			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
+//	std::cout << "newPos AFTER adjust:" << this->newPos.pos.x << ", "
+//			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
 
 }
 
@@ -404,6 +450,7 @@ void MoveCamera::TransformRotationToEuler() {
 void MoveCamera::TransformEulerToRotation() {
 	math::Quaternion *auxQuat = new math::Quaternion(this->rollAngle,
 			this->pitchAngle, this->yawAngle);
+
 	this->rotationW = auxQuat->w;
 	this->rotationX = auxQuat->x;
 	this->rotationY = auxQuat->y;
@@ -420,13 +467,14 @@ void MoveCamera::AdjustRotationToKitchenLink() {
 void MoveCamera::OnUpdate() {
 
 	this->i++;
+	this->publisher->Publish(this->msgToSend);
 //	std::cout << "OnUpdate" << std::endl;
 //	std::cout << i << std::endl;
 
 //	this->PrintCameraPose();
 
 	if (this->i % 1000 == 0) {
-		std::cout << "Executing" << std::endl;
+//		std::cout << "Executing" << std::endl;
 		this->FetchRealKinectPose();
 		this->SubtractQuaternionAngles();
 //		this->PrintTransformPose(); // doar print ramane comentat
