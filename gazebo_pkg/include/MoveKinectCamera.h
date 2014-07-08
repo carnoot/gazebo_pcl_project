@@ -9,6 +9,7 @@
 #include "ros/ros.h"
 #include "/opt/ros/hydro/include/tf/transform_listener.h"
 #include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
+//#include "/home/furdek/catkin_ws/devel/include/ObjectInspection.h"
 
 namespace gazebo {
 
@@ -103,6 +104,7 @@ private:
 	math::Matrix3 testMatrix2;
 
 public:
+	ros::ServiceServer service;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;
 	transport::NodePtr senderNode;

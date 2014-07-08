@@ -4,8 +4,11 @@
 #include "ros/ros.h"
 #include <sdf/sdf.hh>
 #include "gazebo/gazebo.hh"
+#include "gazebo/physics/physics.hh"
+#include "gazebo/common/common.hh"
 #include "gazebo_pkg/GetObject.h"
 #include "gazebo_pkg/Object.h"
+#include "gazebo_pkg/ObjectInspectionNumber.h"
 #include <cstdlib>
 #include <sstream>
 #include <vector>
@@ -32,6 +35,8 @@ public:
 public:
 	bool GetObjects(gazebo_pkg::GetObject::Request &req,
 			gazebo_pkg::GetObject::Response &res);
+	bool ObjectToInspect(gazebo_pkg::ObjectInspectionNumber::Request &,
+			gazebo_pkg::ObjectInspectionNumber::Response &);
 
 public:
 	std::string CreatePositionString(gazebo_pkg::Object obj);
@@ -50,9 +55,11 @@ public:
 
 public:
 	ros::ServiceServer service;
+	ros::ServiceServer service_1;
 	event::ConnectionPtr updateConnection;
 
 private:
+	math::Box bounding_box;
 	bool primit_coord;
 
 private:

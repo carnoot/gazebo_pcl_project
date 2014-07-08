@@ -42,6 +42,9 @@ add_service_files(
 	GetCoordFromClient.srv
 	GetTextParam.srv
 	SendStampedPose.srv
+	ObjectInspectionNumber.srv
+	ObjectInspectionBounding.srv
+	ObjectInspectionCenter.srv
 )
 
 generate_messages(   

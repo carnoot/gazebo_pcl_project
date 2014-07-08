@@ -65,9 +65,8 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	this->senderNode->Init("MoveKinectCameraSender");
 	transport::run();
 
-	this->publisher = this->senderNode->Advertise
-			< custom_pose_message::msgs::CustomPoseRequest
-			> ("customPosition");
+	this->publisher = this->senderNode->Advertise<
+			custom_pose_message::msgs::CustomPoseRequest>("customPosition");
 
 	std::cout << "MoveKinectCamera WAITING for Connection!" << std::endl;
 	this->publisher->WaitForConnection();
@@ -97,63 +96,10 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	this->rotationAngle = -math::Angle::Pi.Radian() / 4;
 	this->cameraRotationStepSize = 0.5;
 
-//	this->xRotationMatrix = math::Matrix3(1, 0, 0, 0, cos(this->rotationAngle),
-//			sin(this->rotationAngle), 0, -sin(this->rotationAngle),
-//			cos(this->rotationAngle));
-//	this->yRotationMatrix = math::Matrix3(cos(this->rotationAngle), 0,
-//			-sin(this->rotationAngle), 0, 1, 0, sin(this->rotationAngle), 0,
-//			cos(this->rotationAngle));
-
 	this->cameraLinkName.append("camera_link");
 	this->model = _parent;
 
-//	std::cout << "MODEL'S NAME: " << this->model->GetName() << std::endl;
-//	std::cout << this->model->GetLink(this->cameraLinkName)->GetWorldPose().rot
-//			<< std::endl;
-
-//	this->newPos.pos.z = this->z_offset;
-
-//	this->newPos.rot.SetFromEuler(-6.28 * 74.62 / 360, 1.57,
-//			this->yaw * 6.28 / 360);
-//	this->model->SetWorldPose(this->newPos);
-
-//	this->newPos.rot.SetFromEuler(0, 0, 3.1415);
-//	this->model->SetWorldPose(this->newPos);
-
-//	this->newPos.rot.SetFromEuler(0, 0, 3.1415); // ROTATIE IN JURUL AXEI Y
-//
-//	this->model->SetWorldPose(this->newPos);
-////
-//	this->newPos.rot.SetFromEuler(0, 0, this->yaw * 6.28 / 360); // ROTATIE IN JURUL AXEI Z
-//
-//	this->model->SetWorldPose(this->newPos);
-
-//	std::cout << "SETTING Y ROTATION" << std::endl;
-
-//	this->newPos.rot.SetFromEuler(6.28*37.62 / 360, 0 , 0); // ROTATIE IN JURUL AXEI X, unghiul dintre planul OX si planul de view al camerei sa fie 37.. grade
-//
-//	this->model->SetWorldPose(this->newPos);
-
 	this->yaw = 0;
-
-//	this->model->SetLinkWorldPose(this->newPos, this->cameraLinkName);
-
-//	this->model->SetLinkWorldPose(
-//			*new math::Pose(this->x_offset, this->y_offset, this->z_offset, 0,
-//					0, 0), this->cameraLinkName);
-
-//	this->subscriber = this->receiveNode->Subscribe("~/customOrientation",
-//			MoveCamera::SetNewOrientation);
-//	this->subscriber = this->receiveNode->Subscribe("~/customOrientation",
-//			&MoveCamera::SetNewOrientation, this, false);
-
-//	this->subscriber = this->receiveNode->Subscribe("~/customOrientation",
-//			&MoveCamera::SetNewOrientation, this, false);
-
-//	this->subscriber = this->receiveNode->Subscribe("~/customOrientation",
-//			&MoveCamera::SetNewOrientation, this, false);
-
-//	std::cout << "CONNECT TO ON UPDATE" << std::endl;
 
 	this->updateConnection = event::Events::ConnectWorldUpdateBegin(
 			boost::bind(&MoveCamera::OnUpdate, this));

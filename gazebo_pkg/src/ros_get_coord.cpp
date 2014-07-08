@@ -13,14 +13,30 @@ RosGetCoord::RosGetCoord() {
 	this->service = n.advertiseService("get_object", &RosGetCoord::GetObjects,
 			this);
 
+	this->service_1 = n.advertiseService("object_to_inspect",
+			&RosGetCoord::ObjectToInspect, this);
+
 	ROS_INFO("Waiting for coordinates!");
 
 }
 
-void RosGetCoord::OnUpdate(){
+void RosGetCoord::OnUpdate() {
 
 //	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
 //	this->parent->GetModel(2)->GetBoundingBox()
+
+}
+
+bool RosGetCoord::ObjectToInspect(gazebo_pkg::ObjectInspectionNumber::Request &req,
+		gazebo_pkg::ObjectInspectionNumber::Response &res) {
+
+	int nr = req.number;
+	boost::shared_ptr<gazebo::physics::Model> model_ptr = this->parent->GetModel(nr);
+	physics::ModelPtr my_model = this->parent->GetModel(nr);
+//	model_ptr = this->parent->GetModel(nr);
+	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min, model_ptr->GetBoundingBox().max);
+
+	return true;
 
 }
 
@@ -36,10 +52,7 @@ bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 			it != vect.end(); ++it) {
 
 		currentObject = *it;
-
 		this->CreateShape(currentObject);
-
-//		ROS_INFO("ID = %d, COLOR = %s", it->ID, it->COLOR.c_str());
 
 	}
 
@@ -51,7 +64,7 @@ void RosGetCoord::Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf) {
 	this->parent = _parent;
 
 	this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-				boost::bind(&RosGetCoord::OnUpdate, this));
+			boost::bind(&RosGetCoord::OnUpdate, this));
 
 	this->spinner = new ros::AsyncSpinner(1);
 	this->spinner->start();
