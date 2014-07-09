@@ -27,14 +27,41 @@ void RosGetCoord::OnUpdate() {
 
 }
 
-bool RosGetCoord::ObjectToInspect(gazebo_pkg::ObjectInspectionNumber::Request &req,
+bool RosGetCoord::ObjectToInspect(
+		gazebo_pkg::ObjectInspectionNumber::Request &req,
 		gazebo_pkg::ObjectInspectionNumber::Response &res) {
 
 	int nr = req.number;
-	boost::shared_ptr<gazebo::physics::Model> model_ptr = this->parent->GetModel(nr);
+
+	boost::shared_ptr<gazebo::physics::Model> model_ptr =
+			this->parent->GetModel(nr);
 	physics::ModelPtr my_model = this->parent->GetModel(nr);
-//	model_ptr = this->parent->GetModel(nr);
-	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min, model_ptr->GetBoundingBox().max);
+
+	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
+			model_ptr->GetBoundingBox().max);
+	this->object_center.resize(3);
+
+	this->object_center[0] = this->bounding_box.GetCenter().x;
+	this->object_center[1] = this->bounding_box.GetCenter().y;
+	this->object_center[2] = this->bounding_box.GetCenter().z;
+
+	std::cout << "GOT BOUNDING BOX && CENTER" << std::endl;
+
+	ros::NodeHandle n;
+	ros::ServiceClient client = n.serviceClient<
+			gazebo_pkg::ObjectInspectionCenter>("get_object_center");
+
+	gazebo_pkg::ObjectInspectionCenter srv;
+	srv.request.centerPoint.elems[0] = this->object_center[0];
+	srv.request.centerPoint.elems[1] = this->object_center[1];
+	srv.request.centerPoint.elems[2] = this->object_center[2];
+
+	if (client.call(srv)) {
+		ROS_INFO("Object Center Sent Successfully!");
+	} else {
+		ROS_ERROR("Object Center Sending Failed!");
+		return 1;
+	}
 
 	return true;
 

@@ -17,6 +17,7 @@
 #include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
 #include <boost/shared_ptr.hpp>
 #include "gazebo_pkg/GetTextParam.h"
+#include "gazebo_pkg/ObjectInspectionCenter.h"
 #include "ros/ros.h"
 
 namespace gazebo {
@@ -42,12 +43,16 @@ private:
 
 public:
 	void OnUpdate();
-	void InitCameraNode();
-	bool CheckPointReached();
-	void CalcAndPublishNextPoint();
-	bool getTextParam(gazebo_pkg::GetTextParam::Request &req,
+	void InitCameraNode();bool CheckPointReached();
+	void CalcAndPublishNextPoint();bool getTextParam(
+			gazebo_pkg::GetTextParam::Request &req,
 			gazebo_pkg::GetTextParam::Response &res);
-	void setCameraPosition(const boost::shared_ptr<const custom_pose_message::msgs::CustomPoseRequest> &);
+	void setCameraPosition(
+			const boost::shared_ptr<
+					const custom_pose_message::msgs::CustomPoseRequest> &);
+	bool GetObjectCenter(
+			gazebo_pkg::ObjectInspectionCenter::Request &,
+			gazebo_pkg::ObjectInspectionCenter::Response &);
 	void initService();
 
 	// Pointer to the model
@@ -73,6 +78,7 @@ private:
 	//Ogre::SceneManager::AnimationList *animList;
 	Ogre::Animation *cameraAnimation;
 	Ogre::AnimationState *cameraAnimationState;
+
 	int i, j, k;
 	double x, y, z;
 	double x_offset, y_offset, z_offset;
@@ -85,6 +91,11 @@ private:
 	double camera_pos_x;
 	double camera_pos_y;
 	double camera_pos_z;
+
+	double lookAt_x;
+	double lookAt_y;
+	double lookAt_z;
+
 	math::Pose newPos;
 	math::Matrix3 yRotationMatrix;
 	math::Matrix3 xRotationMatrix;
@@ -101,15 +112,11 @@ private:
 	transport::PublisherPtr publisher;
 	transport::SubscriberPtr subscriber;
 	custom_pose_message::msgs::CustomPoseRequest msgToSend;
-	bool called;
-	bool present;
-	bool anim;
-	bool published;
-	bool added;
-	bool test_bool;
 
+	bool called;bool present;bool anim;bool published;bool added;bool test_bool;bool look_now;bool position_ready;
 
 	ros::ServiceServer service;
+	ros::ServiceServer get_object_center_service;
 	ros::Subscriber sub;
 	ros::AsyncSpinner *spinner;
 

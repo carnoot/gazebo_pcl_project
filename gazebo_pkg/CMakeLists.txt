@@ -20,6 +20,7 @@ find_package(catkin REQUIRED
 	rospy
 	std_msgs
 	geometry_msgs
+	sensor_msgs
 	message_generation
 	urdf
 	kdl_parser
@@ -27,6 +28,7 @@ find_package(catkin REQUIRED
 	cv_bridge
 	gazebo_plugins
 	eigen
+	pcl_conversions
 )
 
 add_message_files(
@@ -45,11 +47,14 @@ add_service_files(
 	ObjectInspectionNumber.srv
 	ObjectInspectionBounding.srv
 	ObjectInspectionCenter.srv
+	ObjectInspectionCameraPos.srv
+	ObjectInspectionCloud.srv
 )
 
 generate_messages(   
   DEPENDENCIES
   geometry_msgs
+  sensor_msgs
   std_msgs
 )
 
@@ -76,7 +81,7 @@ add_subdirectory(custom_pose_message/msgs)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES gazebo_pkg 
-  CATKIN_DEPENDS message_runtime roscpp rospy std_msgs geometry_msgs gazebo_plugins pcl_ros pcl
+  CATKIN_DEPENDS message_runtime roscpp rospy std_msgs geometry_msgs gazebo_plugins pcl_ros pcl pcl_conversions
   DEPENDS system_lib gazebo
 )
 
@@ -88,7 +93,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
  include_directories(
 	include
-	${catkin_INCLUDE_DIRS} ${gazebo_pkg_SOURCE_DIR}/include
+	${catkin_INCLUDE_DIRS} ${gazebo_pkg_SOURCE_DIR}/include ${PCL_INCLUDE_DIRS}
 )
 
 ## HACK PENTRU QT ( DE LA FERKO ) ##
@@ -232,3 +237,12 @@ target_link_libraries(EuclideanClusterCategorizer stlWriter ${catkin_LIBRARIES} 
 add_library(stl_loader src/stl_loader.cpp)
 add_executable(stl_to_mesh src/stl_to_mesh.cpp)
 target_link_libraries(stl_to_mesh stl_loader ${catkin_LIBRARIES} ${OGRE_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(add_object_inspection_number src/add_object_inspection_number.cpp)
+target_link_libraries(add_object_inspection_number ${catkin_LIBRARIES})
+
+add_executable(add_object_inspection_camera_pos src/add_object_inspection_camera_pos.cpp)
+target_link_libraries(add_object_inspection_camera_pos ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_processing_module src/pcl_processing_module.cpp)
+target_link_libraries(pcl_processing_module ${catkin_LIBRARIES} ${PCL_LIBRARIES})

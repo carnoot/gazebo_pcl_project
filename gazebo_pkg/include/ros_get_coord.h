@@ -9,6 +9,7 @@
 #include "gazebo_pkg/GetObject.h"
 #include "gazebo_pkg/Object.h"
 #include "gazebo_pkg/ObjectInspectionNumber.h"
+#include "gazebo_pkg/ObjectInspectionCenter.h"
 #include <cstdlib>
 #include <sstream>
 #include <vector>
@@ -60,6 +61,7 @@ public:
 
 private:
 	math::Box bounding_box;
+	std::vector<float> object_center;
 	bool primit_coord;
 
 private:

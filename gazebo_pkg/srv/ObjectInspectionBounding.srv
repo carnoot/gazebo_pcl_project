@@ -1,3 +1,4 @@
----
 float32[3] BoundingMin
 float32[3] BoundingMax
+---
+bool success

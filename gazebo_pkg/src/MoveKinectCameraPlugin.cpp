@@ -36,6 +36,8 @@ void MoveKinectCameraPlugin::Load(int /*_argc*/, char ** /*_argv*/) {
 
 	this->called = false;
 	this->present = false;
+	this->look_now = false;
+	this->position_ready = false;
 
 	this->z = this->z_offset;
 
@@ -94,6 +96,27 @@ void MoveKinectCameraPlugin::Init() {
 	this->subscriber = this->receiveNode->Subscribe("customPosition",
 			&MoveKinectCameraPlugin::setCameraPosition, this);
 
+	ros::NodeHandle n;
+	this->get_object_center_service = n.advertiseService("get_object_center",
+			&MoveKinectCameraPlugin::GetObjectCenter, this);
+
+}
+
+bool MoveKinectCameraPlugin::GetObjectCenter(
+		gazebo_pkg::ObjectInspectionCenter::Request &req,
+		gazebo_pkg::ObjectInspectionCenter::Response &res) {
+
+	this->lookAt_x = req.centerPoint.elems[0];
+	this->lookAt_y = req.centerPoint.elems[1];
+	this->lookAt_z = req.centerPoint.elems[2];
+
+	std::cout << "OBJECT CENTER SAVED!" << std::endl;
+
+	std::cout << "Object Centre: " << this->lookAt_x << " " << this->lookAt_y
+			<< " " << this->lookAt_z << std::endl;
+
+	this->look_now = true; //ONLY USED IF WANT TO use lookAt outside of the callback function!
+
 }
 
 void MoveKinectCameraPlugin::setCameraPosition(
@@ -104,9 +127,17 @@ void MoveKinectCameraPlugin::setCameraPosition(
 	this->camera_pos_y = pose_msg->pos_y();
 	this->camera_pos_z = pose_msg->pos_z();
 
-	std::cout << "RECEIVED X = " << pose_msg->pos_x() << std::endl;
-	std::cout << "RECEIVED Y = " << pose_msg->pos_y() << std::endl;
-	std::cout << "RECEIVED Z = " << pose_msg->pos_z() << std::endl;
+	this->cameraVisual->SetPosition(
+			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
+					this->camera_pos_z));
+
+	std::cout << "Position READY!" << std::endl;
+
+	this->position_ready = true;
+
+//	std::cout << "RECEIVED X = " << pose_msg->pos_x() << std::endl;
+//	std::cout << "RECEIVED Y = " << pose_msg->pos_y() << std::endl;
+//	std::cout << "RECEIVED Z = " << pose_msg->pos_z() << std::endl;
 
 }
 
@@ -358,30 +389,42 @@ void MoveKinectCameraPlugin::OnUpdate() {
 			this->test_bool = false;
 		}
 
-		this->cameraVisual->GetSceneNode()->lookAt(
-				*new Ogre::Vector3(-3.984, -4.672, 0), Ogre::Node::TS_WORLD,
-				Ogre::Vector3::UNIT_X); // MUKODIK EZ A FOS
+		if (this->look_now && this->position_ready) {
+
+			this->cameraVisual->GetSceneNode()->setPosition(
+					*new Ogre::Vector3(this->camera_pos_x, this->camera_pos_y,
+							this->camera_pos_z));
+
+			this->cameraVisual->GetSceneNode()->lookAt(
+					*new Ogre::Vector3(this->lookAt_x, this->lookAt_y,
+							this->lookAt_z), Ogre::Node::TS_WORLD,
+					Ogre::Vector3::UNIT_X);
+
+			this->msgToSend.set_pos_x(
+					this->cameraVisual->GetSceneNode()->getPosition().x);
+			this->msgToSend.set_pos_y(
+					this->cameraVisual->GetSceneNode()->getPosition().y);
+			this->msgToSend.set_pos_z(
+					this->cameraVisual->GetSceneNode()->getPosition().z);
+
+			this->msgToSend.set_rot_w(
+					this->cameraVisual->GetSceneNode()->getOrientation().w);
+			this->msgToSend.set_rot_x(
+					this->cameraVisual->GetSceneNode()->getOrientation().x);
+			this->msgToSend.set_rot_y(
+					this->cameraVisual->GetSceneNode()->getOrientation().y);
+			this->msgToSend.set_rot_z(
+					this->cameraVisual->GetSceneNode()->getOrientation().z);
+
+			this->publisher->Publish(this->msgToSend);
+
+			this->look_now = false;
+			this->position_ready = false;
+
+		}
 
 //		std::cout << this->cameraVisual->GetSceneNode()->getOrientation()
 //				<< std::endl;
-
-		this->msgToSend.set_pos_x(
-				this->cameraVisual->GetSceneNode()->getPosition().x);
-		this->msgToSend.set_pos_y(
-				this->cameraVisual->GetSceneNode()->getPosition().y);
-		this->msgToSend.set_pos_z(
-				this->cameraVisual->GetSceneNode()->getPosition().z);
-
-		this->msgToSend.set_rot_w(
-				this->cameraVisual->GetSceneNode()->getOrientation().w);
-		this->msgToSend.set_rot_x(
-				this->cameraVisual->GetSceneNode()->getOrientation().x);
-		this->msgToSend.set_rot_y(
-				this->cameraVisual->GetSceneNode()->getOrientation().y);
-		this->msgToSend.set_rot_z(
-				this->cameraVisual->GetSceneNode()->getOrientation().z);
-
-		this->publisher->Publish(this->msgToSend);
 
 //		std::cout << this->model->GetName() << std::endl;
 //		std::cout << this->cameraVisual->GetName() << std::endl;

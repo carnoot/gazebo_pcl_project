@@ -26,6 +26,8 @@ MoveCamera::MoveCamera() {
 	this->kitchen_link_pitch_offset = 0;
 	this->kitchen_link_yaw_offset = 0; //-1.57; //-3.141;
 
+	this->orientation_ready = false;
+
 //	this->initialQuaternion.setW();
 //	this->initialQuaternion.setX();
 //	this->initialQuaternion.setY();
@@ -72,6 +74,16 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	this->publisher->WaitForConnection();
 	std::cout << "MoveKinectCamera Connection Ready!" << std::endl;
 
+	ros::NodeHandle n;
+	this->service = n.advertiseService("get_camera_position",
+			&MoveCamera::GetCameraPosition, this);
+
+	this->client = n.serviceClient<gazebo_pkg::ObjectInspectionCloud>(
+			"get_cloud");
+
+//	this->sub = n.subscribe("/camera/depth/points", 1000,
+//			&MoveCamera::SaveClouds, this);
+
 	this->msgToSend.set_pos_x(10.0);
 	this->msgToSend.set_pos_y(20.0);
 	this->msgToSend.set_pos_z(30.0);
@@ -106,23 +118,56 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 
 }
 
+void MoveCamera::SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &message) {
+
+    pcl::fromROSMsg(*message, this->cloud);
+    std::cout << this->cloud.size() << std::endl;
+
+}
+
+bool MoveCamera::GetCameraPosition(
+		gazebo_pkg::ObjectInspectionCameraPos::Request &req,
+		gazebo_pkg::ObjectInspectionCameraPos::Response &res) {
+
+	this->look_at_pos_x = req.cameraPos.elems[0];
+	this->look_at_pos_y = req.cameraPos.elems[1];
+	this->look_at_pos_z = req.cameraPos.elems[2];
+
+	std::cout << "Camera Position Ready" << std::endl;
+
+	this->msgToSend.set_pos_x(this->look_at_pos_x);
+	this->msgToSend.set_pos_y(this->look_at_pos_y);
+	this->msgToSend.set_pos_z(this->look_at_pos_z);
+
+	this->publisher->Publish(this->msgToSend);
+
+	return true;
+
+}
+
 void MoveCamera::SetNewOrientation(
 		const boost::shared_ptr<
 				const custom_pose_message::msgs::CustomPoseRequest>& orientation_msg) {
 
-	this->look_at_pos_x = orientation_msg->pos_x();
-	this->look_at_pos_y = orientation_msg->pos_y();
-	this->look_at_pos_z = orientation_msg->pos_z();
+	// ############### POSITION WON't CHANGE, BUT NEED TO BE INITIALIZED TO SEND #################
+//	this->look_at_pos_x = orientation_msg->pos_x();
+//	this->look_at_pos_y = orientation_msg->pos_y();
+//	this->look_at_pos_z = orientation_msg->pos_z();
+	// ############### POSITION WON't CHANGE, BUT NEED TO BE INITIALIZED TO SEND #################
 
 	this->look_at_w = orientation_msg->rot_w();
 	this->look_at_x = orientation_msg->rot_x();
 	this->look_at_y = orientation_msg->rot_y();
 	this->look_at_z = orientation_msg->rot_z();
 
-	std::cout << "RECEIVED W = " << orientation_msg->rot_w() << std::endl;
-	std::cout << "RECEIVED X = " << orientation_msg->rot_x() << std::endl;
-	std::cout << "RECEIVED Y = " << orientation_msg->rot_y() << std::endl;
-	std::cout << "RECEIVED Z = " << orientation_msg->rot_z() << std::endl;
+	std::cout << "New ORIENTATION SET" << std::endl;
+
+	this->orientation_ready = true;
+
+//	std::cout << "RECEIVED W = " << orientation_msg->rot_w() << std::endl;
+//	std::cout << "RECEIVED X = " << orientation_msg->rot_x() << std::endl;
+//	std::cout << "RECEIVED Y = " << orientation_msg->rot_y() << std::endl;
+//	std::cout << "RECEIVED Z = " << orientation_msg->rot_z() << std::endl;
 
 }
 
@@ -413,23 +458,35 @@ void MoveCamera::AdjustRotationToKitchenLink() {
 void MoveCamera::OnUpdate() {
 
 	this->i++;
-	this->publisher->Publish(this->msgToSend);
+//	this->publisher->Publish(this->msgToSend);
 //	std::cout << "OnUpdate" << std::endl;
 //	std::cout << i << std::endl;
 
 //	this->PrintCameraPose();
 
-	if (this->i % 1000 == 0) {
+//	if (this->i % 1000 == 0) {
 //		std::cout << "Executing" << std::endl;
-		this->FetchRealKinectPose();
-		this->SubtractQuaternionAngles();
+
+//		this->FetchRealKinectPose();
+//		this->SubtractQuaternionAngles();
+
 //		this->PrintTransformPose(); // doar print ramane comentat
+	if (this->orientation_ready) {
 		this->SetCameraPosition();
+//		gazebo_pkg::ObjectInspectionCloud srv;
+//		if (client.call(srv)) {
+//			ROS_INFO("OK!");
+//		} else {
+//			ROS_ERROR("Not OK!");
+//			return 1;
+//		}
+		this->orientation_ready = false;
+	}
 //		this->PrintCameraPose(); // doar print ramane comentat
 
 //		this->newPos.pos.x = this->newPos.pos.z + 0.01;
 //		this->model->SetWorldPose(this->newPos);
-	}
+//	}
 
 }
 

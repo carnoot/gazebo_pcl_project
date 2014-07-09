@@ -10,10 +10,17 @@
 #include "/opt/ros/hydro/include/tf/transform_listener.h"
 #include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
 //#include "/home/furdek/catkin_ws/devel/include/ObjectInspection.h"
+#include <gazebo_pkg/ObjectInspectionCameraPos.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl/pcl_base.h>
+#include <pcl/point_types.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <gazebo_pkg/ObjectInspectionCloud.h>
 
 namespace gazebo {
 
 //typedef const boost::shared_ptr<geometry_msgs::Pose> customPosePtr;
+typedef pcl::PointXYZ PointType;
 
 class MoveCamera: public ModelPlugin {
 
@@ -41,6 +48,9 @@ public:
 	void SubtractQuaternionAngles();
 	void SetTransformQuaternion();
 	void SetNewOrientation(const boost::shared_ptr<const custom_pose_message::msgs::CustomPoseRequest> &);
+	bool GetCameraPosition(gazebo_pkg::ObjectInspectionCameraPos::Request &,
+			gazebo_pkg::ObjectInspectionCameraPos::Response &);
+	void SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &);
 
 // Pointer to the model
 private:
@@ -88,6 +98,9 @@ private:
 	double look_at_x;
 	double look_at_y;
 	double look_at_z;
+
+	bool orientation_ready;
+
 	math::Pose newPos;
 	math::Pose probaPos;
 	math::Quaternion rotationQuaternion;
@@ -103,8 +116,12 @@ private:
 	math::Matrix3 testMatrix1;
 	math::Matrix3 testMatrix2;
 
+    pcl::PointCloud<PointType> cloud;
+
 public:
 	ros::ServiceServer service;
+	ros::ServiceClient client;
+	ros::Subscriber sub;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;
 	transport::NodePtr senderNode;
