@@ -75,11 +75,14 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	std::cout << "MoveKinectCamera Connection Ready!" << std::endl;
 
 	ros::NodeHandle n;
+
 	this->service = n.advertiseService("get_camera_position",
 			&MoveCamera::GetCameraPosition, this);
 
 	this->client = n.serviceClient<gazebo_pkg::ObjectInspectionCloud>(
 			"get_cloud");
+
+	this->client_1 = n.serviceClient<gazebo_pkg::ObjectInspectionCameraPos>("pass_camera_position");
 
 //	this->sub = n.subscribe("/camera/depth/points", 1000,
 //			&MoveCamera::SaveClouds, this);
@@ -120,8 +123,8 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 
 void MoveCamera::SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &message) {
 
-    pcl::fromROSMsg(*message, this->cloud);
-    std::cout << this->cloud.size() << std::endl;
+	pcl::fromROSMsg(*message, this->cloud);
+	std::cout << this->cloud.size() << std::endl;
 
 }
 
@@ -133,7 +136,25 @@ bool MoveCamera::GetCameraPosition(
 	this->look_at_pos_y = req.cameraPos.elems[1];
 	this->look_at_pos_z = req.cameraPos.elems[2];
 
+	math::Pose init_pos;
+	init_pos.pos.x = this->look_at_pos_x; //+ 2.6;
+	init_pos.pos.y = this->look_at_pos_y; //+ 6.5;
+	init_pos.pos.z = this->look_at_pos_z; //- 1.6;
+
+	this->model->SetLinkWorldPose(init_pos, this->cameraLinkName);
+
 	std::cout << "Camera Position Ready" << std::endl;
+
+	gazebo_pkg::ObjectInspectionCameraPos srv;
+	srv.request.cameraPos.elems[0] = this->look_at_pos_x;
+	srv.request.cameraPos.elems[1] = this->look_at_pos_y;
+	srv.request.cameraPos.elems[2] = this->look_at_pos_z;
+
+	if (this->client_1.call(srv)) {
+		ROS_INFO("OK!");
+	} else {
+		ROS_ERROR("Not OK!");
+	}
 
 	this->msgToSend.set_pos_x(this->look_at_pos_x);
 	this->msgToSend.set_pos_y(this->look_at_pos_y);
@@ -446,6 +467,7 @@ void MoveCamera::TransformEulerToRotation() {
 	this->rotationX = auxQuat->x;
 	this->rotationY = auxQuat->y;
 	this->rotationZ = auxQuat->z;
+
 }
 
 void MoveCamera::AdjustRotationToKitchenLink() {
@@ -472,14 +494,14 @@ void MoveCamera::OnUpdate() {
 
 //		this->PrintTransformPose(); // doar print ramane comentat
 	if (this->orientation_ready) {
-		this->SetCameraPosition();
-//		gazebo_pkg::ObjectInspectionCloud srv;
-//		if (client.call(srv)) {
-//			ROS_INFO("OK!");
-//		} else {
-//			ROS_ERROR("Not OK!");
-//			return 1;
-//		}
+//		this->SetCameraPosition();
+		sleep(4);
+		gazebo_pkg::ObjectInspectionCloud srv;
+		if (client.call(srv)) {
+			ROS_INFO("OK!");
+		} else {
+			ROS_ERROR("Not OK!");
+		}
 		this->orientation_ready = false;
 	}
 //		this->PrintCameraPose(); // doar print ramane comentat

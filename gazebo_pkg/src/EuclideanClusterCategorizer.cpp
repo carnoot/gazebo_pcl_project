@@ -1,4 +1,5 @@
 #include <gazebo_pkg/EuclideanClusterCategorizer.h>
+//#include <EuclideanClusterCategorizer.h>
 #include "/home/furdek/catkin_ws/src/gazebo_pkg/include/stlWriter.h"
 
 void save_proba(const pcl::PointCloud<PointT>::Ptr cloud){

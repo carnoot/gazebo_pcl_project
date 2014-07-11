@@ -127,12 +127,20 @@ void MoveKinectCameraPlugin::setCameraPosition(
 	this->camera_pos_y = pose_msg->pos_y();
 	this->camera_pos_z = pose_msg->pos_z();
 
-	this->cameraVisual->SetPosition(
-			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
-					this->camera_pos_z));
+//	this->cameraVisual->SetWorldPose(
+//			*new math::Pose(this->camera_pos_x, this->camera_pos_y,
+//					this->camera_pos_z, 0, 0, 0));
 
-	std::cout << "Position READY!" << std::endl;
+//	this->cameraVisual->SetWorldPosition(
+//			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
+//					this->camera_pos_z));
 
+//	this->cameraVisual->SetPosition(
+//			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
+//					this->camera_pos_z));
+//
+//	std::cout << "Position READY!" << std::endl;
+//
 	this->position_ready = true;
 
 //	std::cout << "RECEIVED X = " << pose_msg->pos_x() << std::endl;
@@ -391,9 +399,11 @@ void MoveKinectCameraPlugin::OnUpdate() {
 
 		if (this->look_now && this->position_ready) {
 
-			this->cameraVisual->GetSceneNode()->setPosition(
-					*new Ogre::Vector3(this->camera_pos_x, this->camera_pos_y,
-							this->camera_pos_z));
+//			this->cameraVisual->GetSceneNode()->setPosition(
+//					*new Ogre::Vector3(this->camera_pos_x, this->camera_pos_y,
+//							this->camera_pos_z));
+
+//			std::cerr << "LOOK AT !" << std::endl;
 
 			this->cameraVisual->GetSceneNode()->lookAt(
 					*new Ogre::Vector3(this->lookAt_x, this->lookAt_y,

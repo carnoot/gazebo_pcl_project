@@ -10,6 +10,8 @@
 #include "gazebo_pkg/Object.h"
 #include "gazebo_pkg/ObjectInspectionNumber.h"
 #include "gazebo_pkg/ObjectInspectionCenter.h"
+#include "gazebo_pkg/ObjectInspectionBounding.h"
+#include "gazebo_pkg/ObjectInspectionCameraPos.h"
 #include <cstdlib>
 #include <sstream>
 #include <vector>
@@ -49,6 +51,8 @@ public:
 	std::vector<float> QuaternionToEuler(float w, float x,
 			float y, float z);
 	std::string ConvertFloat(float a);
+	bool PassCameraPosition(gazebo_pkg::ObjectInspectionCameraPos::Request &,
+			gazebo_pkg::ObjectInspectionCameraPos::Response &);
 	void OnUpdate();
 
 public:
@@ -57,9 +61,15 @@ public:
 public:
 	ros::ServiceServer service;
 	ros::ServiceServer service_1;
+	ros::ServiceServer service_2;
 	event::ConnectionPtr updateConnection;
 
 private:
+
+	float camera_pos_x;
+	float camera_pos_y;
+	float camera_pos_z;
+
 	math::Box bounding_box;
 	std::vector<float> object_center;
 	bool primit_coord;

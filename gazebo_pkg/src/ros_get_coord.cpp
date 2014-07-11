@@ -16,6 +16,9 @@ RosGetCoord::RosGetCoord() {
 	this->service_1 = n.advertiseService("object_to_inspect",
 			&RosGetCoord::ObjectToInspect, this);
 
+	this->service_2 = n.advertiseService("pass_camera_position",
+			&RosGetCoord::PassCameraPosition, this);
+
 	ROS_INFO("Waiting for coordinates!");
 
 }
@@ -24,6 +27,19 @@ void RosGetCoord::OnUpdate() {
 
 //	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
 //	this->parent->GetModel(2)->GetBoundingBox()
+
+}
+
+bool RosGetCoord::PassCameraPosition(gazebo_pkg::ObjectInspectionCameraPos::Request &req,
+		gazebo_pkg::ObjectInspectionCameraPos::Response &res){
+
+	this->camera_pos_x = req.cameraPos.elems[0];
+	this->camera_pos_y = req.cameraPos.elems[1];
+	this->camera_pos_z = req.cameraPos.elems[2];
+
+	std::cerr << "Camera positions passed!" << std::endl;
+
+	return true;
 
 }
 
@@ -60,7 +76,55 @@ bool RosGetCoord::ObjectToInspect(
 		ROS_INFO("Object Center Sent Successfully!");
 	} else {
 		ROS_ERROR("Object Center Sending Failed!");
-		return 1;
+	}
+
+//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
+//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
+//			<< std::endl;
+//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
+//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
+//			<< std::endl;
+//
+//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
+//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
+//			<< std::endl;
+//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
+//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
+//			<< std::endl;
+
+	client = n.serviceClient<gazebo_pkg::ObjectInspectionBounding>(
+			"get_object_bounding");
+
+	gazebo_pkg::ObjectInspectionBounding srv1;
+	srv1.request.BoundingMin.elems[0] = this->bounding_box.min.x - this->camera_pos_x;
+	srv1.request.BoundingMin.elems[1] = this->bounding_box.min.y - this->camera_pos_y;
+	srv1.request.BoundingMin.elems[2] = this->bounding_box.min.z - this->camera_pos_z;
+
+	srv1.request.BoundingMax.elems[0] = this->bounding_box.max.x - this->camera_pos_x;
+	srv1.request.BoundingMax.elems[1] = this->bounding_box.max.y - this->camera_pos_y;
+	srv1.request.BoundingMax.elems[2] = this->bounding_box.max.z - this->camera_pos_z;
+
+	std::cerr << "MIN SRV: " << srv1.request.BoundingMin.elems[0] << " "
+			<< srv1.request.BoundingMin.elems[1] << " "
+			<< srv1.request.BoundingMin.elems[2] << std::endl;
+
+	std::cerr << "MAX SRV: " << srv1.request.BoundingMax.elems[0] << " "
+			<< srv1.request.BoundingMax.elems[1] << " "
+			<< srv1.request.BoundingMax.elems[2] << std::endl;
+
+//	std::cerr << std::endl;
+//
+//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
+//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
+//			<< std::endl;
+//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
+//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
+//			<< std::endl;
+
+	if (client.call(srv1)) {
+		ROS_INFO("Object BoundingValues Sent Successfully!");
+	} else {
+		ROS_ERROR("Object BoundingValues Sending Failed!");
 	}
 
 	return true;

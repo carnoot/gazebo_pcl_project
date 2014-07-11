@@ -120,7 +120,9 @@ private:
 
 public:
 	ros::ServiceServer service;
+	ros::ServiceServer service_1;
 	ros::ServiceClient client;
+	ros::ServiceClient client_1;
 	ros::Subscriber sub;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;
