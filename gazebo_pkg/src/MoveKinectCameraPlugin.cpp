@@ -6,6 +6,11 @@ MoveKinectCameraPlugin::MoveKinectCameraPlugin() {
 	this->initService();
 	this->added = true;
 	this->test_bool = true;
+
+	std::cerr << "ConnectWorldConnection" << std::endl;
+
+	this->createdWorldConnection = event::Events::ConnectWorldCreated(
+			boost::bind(&MoveKinectCameraPlugin::CreatedWorld, this));
 }
 
 MoveKinectCameraPlugin::~MoveKinectCameraPlugin() {
@@ -47,6 +52,13 @@ void MoveKinectCameraPlugin::Load(int /*_argc*/, char ** /*_argv*/) {
 
 	this->updateConnection = event::Events::ConnectPreRender(
 			boost::bind(&MoveKinectCameraPlugin::OnUpdate, this));
+
+}
+
+void MoveKinectCameraPlugin::CreatedWorld() {
+
+	std::cout << "CREATEDDDDDDDD: " << physics::get_world("balint")->GetName()
+			<< std::endl;
 
 }
 
@@ -319,6 +331,7 @@ void MoveKinectCameraPlugin::OnUpdate() {
 //		this->model->GetLink()
 		gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
 				*new math::Vector3(-3.45, -4.35, 4), this->visualVect);
+//		std::cout << "WORLD: " << gui::get_world() << std::endl;
 	}
 
 	if (this->visualVect.size() != 0 && this->present == false) {
@@ -405,6 +418,15 @@ void MoveKinectCameraPlugin::OnUpdate() {
 
 //			std::cerr << "LOOK AT !" << std::endl;
 
+			std::cout << this->cameraVisual->GetSceneNode()->getOrientation().w
+					<< " "
+					<< this->cameraVisual->GetSceneNode()->getOrientation().x
+					<< " "
+					<< this->cameraVisual->GetSceneNode()->getOrientation().y
+					<< " "
+					<< this->cameraVisual->GetSceneNode()->getOrientation().z
+					<< std::endl;
+
 			this->cameraVisual->GetSceneNode()->lookAt(
 					*new Ogre::Vector3(this->lookAt_x, this->lookAt_y,
 							this->lookAt_z), Ogre::Node::TS_WORLD,
@@ -425,6 +447,11 @@ void MoveKinectCameraPlugin::OnUpdate() {
 					this->cameraVisual->GetSceneNode()->getOrientation().y);
 			this->msgToSend.set_rot_z(
 					this->cameraVisual->GetSceneNode()->getOrientation().z);
+
+			std::cerr << this->cameraVisual->GetSceneNode()->getOrientation()
+					<< std::endl;
+
+			this->cameraVisual->GetSceneNode()->setOrientation(1,0,0,0);
 
 			this->publisher->Publish(this->msgToSend);
 

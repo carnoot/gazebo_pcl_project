@@ -43,6 +43,7 @@ private:
 
 public:
 	void OnUpdate();
+	void CreatedWorld();
 	void InitCameraNode();bool CheckPointReached();
 	void CalcAndPublishNextPoint();bool getTextParam(
 			gazebo_pkg::GetTextParam::Request &req,
@@ -107,6 +108,7 @@ private:
 	math::Matrix3 testMatrix1;
 	math::Matrix3 testMatrix2;
 	event::ConnectionPtr updateConnection;
+	event::ConnectionPtr createdWorldConnection;
 	transport::NodePtr senderNode;
 	transport::NodePtr receiveNode;
 	transport::PublisherPtr publisher;

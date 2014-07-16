@@ -69,6 +69,7 @@ private:
 	float camera_pos_x;
 	float camera_pos_y;
 	float camera_pos_z;
+	float process_offset;
 
 	math::Box bounding_box;
 	std::vector<float> object_center;

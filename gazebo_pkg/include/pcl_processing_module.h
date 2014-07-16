@@ -18,13 +18,18 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/extract_indices.h>
 #include <gazebo/math/Quaternion.hh>
+#include <gazebo.hh>
+#include "gazebo/physics/physics.hh"
+#include "gazebo/common/common.hh"
+#include <pcl/common/transforms.h>
 //#include <eigen3/Eigen/src/Core/MatrixBase.h>
 //#include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
 
-typedef pcl::PointXYZ PointType;
+typedef pcl::PointXYZRGB PointType;
 
 class PclProcesser{
 
@@ -44,7 +49,7 @@ public:
     int PointsInBoundingBoxManual(pcl::PointCloud<PointType>);
     int PointsInBoundingBoxPcl(pcl::PointCloud<PointType>);
     void PlaneSegmentationExtraction(const pcl::PointCloud<PointType>::Ptr);
-    void DisplayPoints();
+    void DisplayPoints(pcl::PointCloud<PointType> &);
 
 public:
 
@@ -63,9 +68,14 @@ public:
     pcl::PointCloud<PointType> cloud_to_process;
     pcl::PointCloud<PointType> *cloud_ptr;
     pcl::PointCloud<PointType> cloud_after_processing;
+    pcl::PointCloud<PointType> rotated_cloud_to_process;
+    pcl::PointCloud<PointType> rotated_axis_cloud_to_process;
+    pcl::PointCloud<pcl::PointXYZRGB> filtered_cloud;
 
     gazebo::math::Quaternion *cam_quaternion;
     gazebo::math::Quaternion *aux_quaternion;
+    Eigen::Matrix4f transform_matrix;
+    Eigen::Matrix4f transform_matrix_axis;
 
 	double quaternion_values[4];
 

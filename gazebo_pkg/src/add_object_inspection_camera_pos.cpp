@@ -10,9 +10,9 @@ int main(int argc, char **argv) {
 			"get_camera_position");
 
 	gazebo_pkg::ObjectInspectionCameraPos srv;
-	srv.request.cameraPos.elems[0] = -2.6;//-2.6;
-	srv.request.cameraPos.elems[1] = -6.5;//-6.5;
-	srv.request.cameraPos.elems[2] = 1.6;//1.6;
+	srv.request.cameraPos.elems[0] = 4;//0;//-2.6;
+	srv.request.cameraPos.elems[1] = -6;//3;//-6.5;
+	srv.request.cameraPos.elems[2] = 1.75;//0.5;//1.6;
 
 	if (client.call(srv)) {
 		ROS_INFO("OK!");

@@ -27,6 +27,9 @@ MoveCamera::MoveCamera() {
 	this->kitchen_link_yaw_offset = 0; //-1.57; //-3.141;
 
 	this->orientation_ready = false;
+	this->get_cloud_ready = false;
+
+	this->delay = 0;
 
 //	this->initialQuaternion.setW();
 //	this->initialQuaternion.setX();
@@ -82,7 +85,11 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	this->client = n.serviceClient<gazebo_pkg::ObjectInspectionCloud>(
 			"get_cloud");
 
-	this->client_1 = n.serviceClient<gazebo_pkg::ObjectInspectionCameraPos>("pass_camera_position");
+	this->client_1 = n.serviceClient<gazebo_pkg::ObjectInspectionCameraPos>(
+			"pass_camera_position");
+
+	this->cam_quaternion_client = n.serviceClient<
+			gazebo_pkg::ObjectInspectionQuaternion>("get_cam_quaternion");
 
 //	this->sub = n.subscribe("/camera/depth/points", 1000,
 //			&MoveCamera::SaveClouds, this);
@@ -160,6 +167,7 @@ bool MoveCamera::GetCameraPosition(
 	this->msgToSend.set_pos_y(this->look_at_pos_y);
 	this->msgToSend.set_pos_z(this->look_at_pos_z);
 
+	std::cerr << "SENDING MESSAGE TO SYSTEM PLUGIN!" << std::endl;
 	this->publisher->Publish(this->msgToSend);
 
 	return true;
@@ -376,6 +384,9 @@ void MoveCamera::SetCameraPosition() {
 //	this->newPos.rot.z = this->finalQuaternion.z;
 
 	this->model->SetWorldPose(this->newPos);
+
+	std::cout << "World pose after Ready: " << this->model->GetWorldPose() << std::endl;
+
 //	this->model->SetLinkWorldPose(this->probaPos, this->cameraLinkName);
 
 }
@@ -494,15 +505,61 @@ void MoveCamera::OnUpdate() {
 
 //		this->PrintTransformPose(); // doar print ramane comentat
 	if (this->orientation_ready) {
-//		this->SetCameraPosition();
-		sleep(4);
+
+		// ############# QUATERNION TEST ###############
+
+//		this->testQuaternion_1.SetFromEuler(0, 0, 1.50);
+//		this->testQuaternion_1.Invert();
+//		this->testQuaternion_1.Normalize();
+//
+//		this->testQuaternion_2.SetFromEuler(0, 0, 1.80);
+////		this->testQuaternion_2.Invert();
+//		this->testQuaternion_2 = this->testQuaternion_1.operator *(this->testQuaternion_2);
+////		this->testQuaternion_2.operator *=(this->testQuaternion_1);
+////		this->testQuaternion_2.Normalize();
+//
+//		std::cout << "QUAT: " << this->testQuaternion_2.w << " " << this->testQuaternion_2 << std::endl;
+
+		// ############# QUATERNION TEST ###############
+
+		this->SetCameraPosition();
+
+		gazebo_pkg::ObjectInspectionQuaternion quat;
+		quat.request.camQuaternion.elems[0] = (float)this->look_at_w;
+		quat.request.camQuaternion.elems[1] = (float)this->look_at_x;
+		quat.request.camQuaternion.elems[2] = (float)this->look_at_y;
+		quat.request.camQuaternion.elems[3] = (float)this->look_at_z;
+
+		std::cerr << "QUATERNION TO SEND: " << quat.request.camQuaternion.elems[0] << " " << quat.request.camQuaternion.elems[1] << " "
+				<< quat.request.camQuaternion.elems[2] << " " << quat.request.camQuaternion.elems[3] << std::endl;
+
+		if (this->cam_quaternion_client.call(quat)) {
+			ROS_INFO("QUAT OK!");
+		} else {
+			ROS_ERROR("QUAT Not OK!");
+		}
+
+		this->orientation_ready = false;
+		this->get_cloud_ready = true;
+
+	}
+
+	if (this->get_cloud_ready) {
+		this->delay++;
+//		std::cout << this->delay << std::endl;
+	}
+
+	if (this->get_cloud_ready && this->delay > 1000) {
+		std::cerr << "SAVE CLOUD NOW!" << std::endl;
 		gazebo_pkg::ObjectInspectionCloud srv;
-		if (client.call(srv)) {
+		if (this->client.call(srv)) {
 			ROS_INFO("OK!");
 		} else {
 			ROS_ERROR("Not OK!");
 		}
-		this->orientation_ready = false;
+		this->get_cloud_ready = false;
+		this->delay = 0;
+
 	}
 //		this->PrintCameraPose(); // doar print ramane comentat
 

@@ -49,6 +49,7 @@ add_service_files(
 	ObjectInspectionCenter.srv
 	ObjectInspectionCameraPos.srv
 	ObjectInspectionCloud.srv
+	ObjectInspectionQuaternion.srv
 )
 
 generate_messages(   
@@ -112,7 +113,7 @@ file(GLOB SOURCES ~/catkin_ws/src/gazebo_ros_pkgs/gazebo_plugins/src/gazebo_ros_
 #add_library(model_push src/model_push.cpp)
 #add_library(factory src/factory.cpp)
 #add_library(world_edit src/world_edit.cpp)
-#add_library(system_gui src/system_gui.cpp)
+add_library(system_gui src/system_gui.cpp)
 add_library(ros_plugin src/ros_plugin.cpp)
 #add_library(ros_plugin_service src/ros_plugin_service.cpp)
 add_library(ros_get_coord src/ros_get_coord.cpp)
@@ -142,7 +143,7 @@ add_library(KitchenFinalPlugin src/KitchenFinalPlugin.cpp)
 #target_link_libraries(model_push ${catkin_LIBRARIES})
 #target_link_libraries(factory ${catkin_LIBRARIES})
 #target_link_libraries(world_edit ${catkin_LIBRARIES})
-#target_link_libraries(system_gui ${catkin_LIBRARIES} ${OGRE_LIBRARIES})
+target_link_libraries(system_gui ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${OGRE_LIBRARIES})
 target_link_libraries(ros_plugin ${catkin_LIBRARIES})
 #target_link_libraries(ros_plugin_service ${catkin_LIBRARIES})
 target_link_libraries(ros_get_coord ${catkin_LIBRARIES})
@@ -245,4 +246,4 @@ add_executable(add_object_inspection_camera_pos src/add_object_inspection_camera
 target_link_libraries(add_object_inspection_camera_pos ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcl_processing_module src/pcl_processing_module.cpp)
-target_link_libraries(pcl_processing_module ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(pcl_processing_module ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${GAZEBO_LIBRARIES})

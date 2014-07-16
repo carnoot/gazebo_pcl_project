@@ -16,6 +16,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <gazebo_pkg/ObjectInspectionCloud.h>
+#include <gazebo_pkg/ObjectInspectionQuaternion.h>
 
 namespace gazebo {
 
@@ -98,8 +99,10 @@ private:
 	double look_at_x;
 	double look_at_y;
 	double look_at_z;
+	double delay;
 
 	bool orientation_ready;
+	bool get_cloud_ready;
 
 	math::Pose newPos;
 	math::Pose probaPos;
@@ -107,6 +110,8 @@ private:
 	math::Quaternion initialQuaternion;
 	math::Quaternion auxQuaternion;
 	math::Quaternion finalQuaternion;
+	math::Quaternion testQuaternion_1;
+	math::Quaternion testQuaternion_2;
 	math::Matrix3 yRotationMatrix;
 	math::Matrix3 xRotationMatrix;
 	math::Matrix3 pointToRotateMatrix;
@@ -123,6 +128,7 @@ public:
 	ros::ServiceServer service_1;
 	ros::ServiceClient client;
 	ros::ServiceClient client_1;
+	ros::ServiceClient cam_quaternion_client;
 	ros::Subscriber sub;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;

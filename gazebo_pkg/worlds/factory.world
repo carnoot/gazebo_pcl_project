@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.4">
-  <world name="default">
+  <world name="balint">
     <include>
       <uri>model://ground_plane</uri>
     </include>
@@ -17,9 +17,9 @@
       <uri>model://KinectCamera</uri>
     </include>
     
-    <!--<include>
+    <include>
       <uri>model://box1</uri>
-    </include>-->
+    </include>
         
     <plugin name="factory_world_plugin_1" filename="libros_get_coord.so"/>
     <plugin name="factory_world_plugin_2" filename="libros_plugin.so"/>

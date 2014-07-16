@@ -20,6 +20,9 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->y_axis_ok = false;
 	this->z_axis_ok = false;
 
+	this->transform_matrix = Eigen::Matrix4f::Identity();
+	this->transform_matrix_axis = Eigen::Matrix4f::Identity();
+
 	ROS_INFO("Ready to process clouds!");
 
 }
@@ -31,6 +34,8 @@ PclProcesser::~PclProcesser() {
 bool PclProcesser::GetCamQuaternion(
 		gazebo_pkg::ObjectInspectionQuaternion::Request &req,
 		gazebo_pkg::ObjectInspectionQuaternion::Response &res) {
+
+	gazebo::math::Matrix4 aux_matrix;
 
 //	this->cam_quaternion.Set(req.camQuaternion.elems[0],
 //			req.camQuaternion.elems[1], req.camQuaternion.elems[2],
@@ -54,13 +59,78 @@ bool PclProcesser::GetCamQuaternion(
 			this->quaternion_values[0], this->quaternion_values[1],
 			this->quaternion_values[2], this->quaternion_values[3]);
 
+	this->aux_quaternion = new gazebo::math::Quaternion(
+			this->quaternion_values[0], -this->quaternion_values[1],
+			-this->quaternion_values[2], -this->quaternion_values[3]);
+
+	//################### MUKODIK A MEGFORDITAS, FINAL QUAT = (1, 0, 0, 0) ########################//
+
+	*this->cam_quaternion = this->aux_quaternion->operator *(
+			*this->cam_quaternion);
+
+	//################### MUKODIK A MEGFORDITAS, FINAL QUAT = (1, 0, 0, 0) ########################
+
+	std::cout << "QUAT FINAL: " << this->cam_quaternion->w << " "
+			<< this->cam_quaternion->x << " " << this->cam_quaternion->y << " "
+			<< this->cam_quaternion->z << std::endl;
+
+	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
+	aux_matrix = this->aux_quaternion->GetAsMatrix4();
+	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
+
+//	std::cout << "aux_matrix: " << std::endl << aux_matrix << std::endl;
+
+	this->transform_matrix(0, 0) = aux_matrix[0][0];
+	this->transform_matrix(0, 1) = aux_matrix[0][1];
+	this->transform_matrix(0, 2) = aux_matrix[0][2];
+	this->transform_matrix(1, 0) = aux_matrix[1][0];
+	this->transform_matrix(1, 1) = aux_matrix[1][1];
+	this->transform_matrix(1, 2) = aux_matrix[1][2];
+	this->transform_matrix(2, 0) = aux_matrix[2][0];
+	this->transform_matrix(2, 1) = aux_matrix[2][1];
+	this->transform_matrix(2, 2) = aux_matrix[2][2];
+
+//	std::cout << "transform_matrix: " << std::endl << this->transform_matrix
+//			<< std::endl;
+
+//################### ALINIEREA TOTALA A AXELOR PCL CU GAZEBO ##########################
+	this->aux_quaternion = new gazebo::math::Quaternion(1.57, 0, 1.57);
+
+	std::cout << "AUX QUAT: " << this->aux_quaternion->w << " "
+			<< this->aux_quaternion->x << " " << this->aux_quaternion->y << " "
+			<< this->aux_quaternion->z << std::endl;
+
+	*this->cam_quaternion = this->aux_quaternion->operator *(
+			*this->cam_quaternion);
+	//################### ALINIEREA TOTALA A AXELOR PCL CU GAZEBO ##########################
+
+	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
+	aux_matrix = this->aux_quaternion->GetAsMatrix4();
+	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
+
+//	std::cout << "aux_matrix_axis: " << std::endl << aux_matrix << std::endl;
+
+	this->transform_matrix_axis(0, 0) = aux_matrix[0][0];
+	this->transform_matrix_axis(0, 1) = aux_matrix[0][1];
+	this->transform_matrix_axis(0, 2) = aux_matrix[0][2];
+	this->transform_matrix_axis(1, 0) = aux_matrix[1][0];
+	this->transform_matrix_axis(1, 1) = aux_matrix[1][1];
+	this->transform_matrix_axis(1, 2) = aux_matrix[1][2];
+	this->transform_matrix_axis(2, 0) = aux_matrix[2][0];
+	this->transform_matrix_axis(2, 1) = aux_matrix[2][1];
+	this->transform_matrix_axis(2, 2) = aux_matrix[2][2];
+
+//	std::cout << "transform_matrix_axis: " << std::endl
+//			<< this->transform_matrix_axis << std::endl;
+
 //	this->cam_quaternion.w = this->quaternion_values[0];
 //	this->cam_quaternion.x = this->quaternion_values[1];
 //	this->cam_quaternion.y = this->quaternion_values[2];
 //	this->cam_quaternion.z = this->quaternion_values[3];
 
-	std::cout << "QUAT RECEIVED: " << this->cam_quaternion->w << " "
-			<< this->cam_quaternion->x << " " << this->cam_quaternion->y << " " << this->cam_quaternion->z << std::endl;
+//	std::cout << "QUAT RECEIVED: " << this->cam_quaternion->w << " "
+//			<< this->cam_quaternion->x << " " << this->cam_quaternion->y << " "
+//			<< this->cam_quaternion->z << std::endl;
 
 }
 
@@ -84,23 +154,20 @@ bool PclProcesser::GetObjectBounding(
 
 }
 
-void PclProcesser::DisplayPoints() {
+void PclProcesser::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 
 	PointType point;
 
 	std::cerr << "Printing!" << std::endl;
-	std::cerr << "Size of cloud: " << this->cloud_to_process.size()
-			<< std::endl;
+	std::cerr << "Size of cloud: " << cloud_to_display.size() << std::endl;
 
-	for (int a = 0; a < this->cloud_to_process.size(); a++) {
-		point = cloud_to_process[a];
+	for (int a = 0; a < cloud_to_display.size(); a++) {
+		point = cloud_to_display[a];
 		if ((!isnan(point.x)) && (!isnan(point.y)) && (!isnan(point.z))) {
 			std::cerr << "x: " << point.x << " y: " << point.y << " z: "
 					<< point.z << std::endl;
 		}
-//		else{
-//			std::cerr << "NAN" << std::endl;
-//		}
+
 	}
 }
 
@@ -112,42 +179,97 @@ int PclProcesser::PointsInBoundingBoxManual(
 	this->z_axis_ok = false;
 
 	PointType point;
+	PointType min_point, max_point;
 	int points_inside = 0;
 
 	pcl::PointCloud<PointType>::Ptr temp_cloud_PTR(
 			new pcl::PointCloud<PointType>(cloud_to_proc));
 
-//	this->PlaneSegmentationExtraction(temp_cloud_PTR);
+	this->PlaneSegmentationExtraction(temp_cloud_PTR);
 
-	std::cerr << this->cloud_to_process.size() << std::endl;
+	std::cerr << "DONE" << std::endl;
 
-	PointType min_point, max_point;
+//	this->DisplayPoints(this->cloud_to_process);
 
-	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
+	pcl::getMinMax3D(this->filtered_cloud, min_point, max_point);
 
 	std::cerr << "min PointCloud values: " << min_point << std::endl;
 	std::cerr << "max PointCloud values: " << max_point << std::endl;
 
-	for (int i = 0; i < this->cloud_to_process.size(); i++) {
+	//################## MAJDNEM JO #########################//
 
-		point = this->cloud_to_process[i];
+	pcl::transformPointCloud(this->filtered_cloud,
+			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
+
+	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
+
+	std::cerr << "min Rotated Axis PointCloud values: " << min_point
+			<< std::endl;
+	std::cerr << "max Rotated Axis PointCloud values: " << max_point
+			<< std::endl;
+
+	pcl::transformPointCloud(this->rotated_axis_cloud_to_process,
+			this->rotated_cloud_to_process, this->transform_matrix);
+
+	pcl::getMinMax3D(this->rotated_cloud_to_process, min_point, max_point);
+
+	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
+	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
+
+	//################## MAJDNEM JO #########################//
+
+//	pcl::transformPointCloud(this->filtered_cloud,
+//			this->rotated_cloud_to_process, this->transform_matrix);
+//
+//	pcl::getMinMax3D(this->rotated_cloud_to_process, min_point, max_point);
+//
+//	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
+//	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
+//
+//	pcl::transformPointCloud(this->rotated_cloud_to_process,
+//			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
+//
+//	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
+//
+//	std::cerr << "min Rotated AXIS PointCloud values: " << min_point
+//			<< std::endl;
+//	std::cerr << "max Rotated AXIS PointCloud values: " << max_point
+//			<< std::endl;
+
+//
+//	pcl::transformPointCloud(this->rotated_axis_cloud_to_process,
+//			this->rotated_cloud_to_process, this->transform_matrix);
+//
+//
+	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
+
+//	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
+//
+//	std::cerr << "min PointCloud values: " << min_point << std::endl;
+//	std::cerr << "max PointCloud values: " << max_point << std::endl;
+
+	for (int i = 0; i < this->rotated_cloud_to_process.size(); i++) {
+
+//		std::cerr << i << std::endl;
+
+		point = this->rotated_cloud_to_process[i];
 
 //		if ((!isnan(point.x)) && (!isnan(point.y)) && (!isnan(point.z))) {
 //			std::cerr << "X: " << point.x << " y: " << point.y << " z: "
 //					<< point.z << std::endl;
 //		}
 
-		if ((point.x >= this->bounding_min[1])
-				&& (point.x <= this->bounding_max[1])) {
+		if ((point.x >= this->bounding_min[0])
+				&& (point.x <= this->bounding_max[0])) {
 			this->x_axis_ok = true;
 		}
-		if ((point.y >= this->bounding_min[2])
-				&& (point.y <= this->bounding_max[2])) {
+		if ((point.y >= this->bounding_min[1])
+				&& (point.y <= this->bounding_max[1])) {
 			this->y_axis_ok = true;
 
 		}
-		if ((point.z >= this->bounding_min[0])
-				&& (point.z <= this->bounding_max[0])) {
+		if ((point.z >= this->bounding_min[2])
+				&& (point.z <= this->bounding_max[2])) {
 			this->z_axis_ok = true;
 		}
 
@@ -166,6 +288,10 @@ int PclProcesser::PointsInBoundingBoxManual(
 		if (this->x_axis_ok && this->y_axis_ok && this->z_axis_ok) {
 			points_inside++;
 		}
+
+		this->x_axis_ok = false;
+		this->y_axis_ok = false;
+		this->z_axis_ok = false;
 
 //		if ((point.x >= this->bounding_min[2])
 //				&& (point.x <= this->bounding_max[2])
@@ -292,10 +418,16 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 void PclProcesser::PlaneSegmentationExtraction(
 		const pcl::PointCloud<PointType>::Ptr cloud) {
 
+	pcl::PointCloud<PointType>::Ptr to_remove_radius_cloud(
+			new pcl::PointCloud<PointType>);
+
+//	pcl::PointCloud<PointType>::Ptr temp_cloud(
+//			new pcl::PointCloud<PointType>(cloud));
+
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
 	pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-	// Create the segmentation object
-	pcl::SACSegmentation<pcl::PointXYZ> seg;
+// Create the segmentation object
+	pcl::SACSegmentation<PointType> seg;
 
 	seg.setOptimizeCoefficients(true);
 
@@ -311,8 +443,21 @@ void PclProcesser::PlaneSegmentationExtraction(
 	extractor.setInputCloud(cloud);
 	extractor.setIndices(inliers);
 	extractor.setNegative(true);
-	extractor.filter(this->cloud_to_process);
-	pcl::io::savePCDFile("/home/furdek/SIM_EXTR.pcd", this->cloud_to_process);
+	extractor.filter(*to_remove_radius_cloud);
+
+	pcl::io::savePCDFile("/home/furdek/SIM_PLANE.pcd", *to_remove_radius_cloud);
+
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr to_remove_radius_cloud_rgb(
+			new pcl::PointCloud<pcl::PointXYZRGB>(*to_remove_radius_cloud));
+
+	pcl::RadiusOutlierRemoval<PointType> outrem;
+
+	outrem.setInputCloud(to_remove_radius_cloud_rgb);
+	outrem.setRadiusSearch(0.05);
+	outrem.setMinNeighborsInRadius(30);
+	outrem.filter(this->filtered_cloud);
+
+	pcl::io::savePCDFile("/home/furdek/SIM_EXTR.pcd", this->filtered_cloud);
 
 }
 

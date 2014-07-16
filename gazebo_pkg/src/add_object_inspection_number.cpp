@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 			"object_to_inspect");
 
 	gazebo_pkg::ObjectInspectionNumber srv;
-	srv.request.number = 5;
+	srv.request.number = 3;
 	if (client.call(srv)) {
 		ROS_INFO("OK!");
 	} else {

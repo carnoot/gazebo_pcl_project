@@ -19,6 +19,8 @@ RosGetCoord::RosGetCoord() {
 	this->service_2 = n.advertiseService("pass_camera_position",
 			&RosGetCoord::PassCameraPosition, this);
 
+	this->process_offset = 10;
+
 	ROS_INFO("Waiting for coordinates!");
 
 }
@@ -30,12 +32,16 @@ void RosGetCoord::OnUpdate() {
 
 }
 
-bool RosGetCoord::PassCameraPosition(gazebo_pkg::ObjectInspectionCameraPos::Request &req,
-		gazebo_pkg::ObjectInspectionCameraPos::Response &res){
+bool RosGetCoord::PassCameraPosition(
+		gazebo_pkg::ObjectInspectionCameraPos::Request &req,
+		gazebo_pkg::ObjectInspectionCameraPos::Response &res) {
 
 	this->camera_pos_x = req.cameraPos.elems[0];
 	this->camera_pos_y = req.cameraPos.elems[1];
 	this->camera_pos_z = req.cameraPos.elems[2];
+
+	std::cout << "Camera POS: " << this->camera_pos_x << " "
+			<< this->camera_pos_y << " " << this->camera_pos_z << std::endl;
 
 	std::cerr << "Camera positions passed!" << std::endl;
 
@@ -72,6 +78,10 @@ bool RosGetCoord::ObjectToInspect(
 	srv.request.centerPoint.elems[1] = this->object_center[1];
 	srv.request.centerPoint.elems[2] = this->object_center[2];
 
+	std::cerr << "Center: " << srv.request.centerPoint.elems[0] << " "
+			<< srv.request.centerPoint.elems[1] << " "
+			<< srv.request.centerPoint.elems[2] << std::endl;
+
 	if (client.call(srv)) {
 		ROS_INFO("Object Center Sent Successfully!");
 	} else {
@@ -85,32 +95,70 @@ bool RosGetCoord::ObjectToInspect(
 //			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
 //			<< std::endl;
 //
-//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
-//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
-//			<< std::endl;
-//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
-//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
-//			<< std::endl;
+
+	std::cerr << "REAL BOUNDING MIN: " << this->bounding_box.min.x << " "
+			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
+			<< std::endl;
+	std::cerr << "REAL BOUNDING MAX: " << this->bounding_box.max.x << " "
+			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
+			<< std::endl;
 
 	client = n.serviceClient<gazebo_pkg::ObjectInspectionBounding>(
 			"get_object_bounding");
 
 	gazebo_pkg::ObjectInspectionBounding srv1;
-	srv1.request.BoundingMin.elems[0] = this->bounding_box.min.x - this->camera_pos_x;
-	srv1.request.BoundingMin.elems[1] = this->bounding_box.min.y - this->camera_pos_y;
-	srv1.request.BoundingMin.elems[2] = this->bounding_box.min.z - this->camera_pos_z;
+//	srv1.request.BoundingMin.elems[0] = this->camera_pos_x - this->bounding_box.min.x;
+//	srv1.request.BoundingMin.elems[1] = this->camera_pos_y - this->bounding_box.min.y;
+//	srv1.request.BoundingMin.elems[2] = this->camera_pos_z - this->bounding_box.min.z;
+//
+//	srv1.request.BoundingMax.elems[0] = this->camera_pos_x - this->bounding_box.max.x;
+//	srv1.request.BoundingMax.elems[1] = this->camera_pos_y - this->bounding_box.max.y;
+//	srv1.request.BoundingMax.elems[2] = this->camera_pos_z - this->bounding_box.max.z;
 
-	srv1.request.BoundingMax.elems[0] = this->bounding_box.max.x - this->camera_pos_x;
-	srv1.request.BoundingMax.elems[1] = this->bounding_box.max.y - this->camera_pos_y;
-	srv1.request.BoundingMax.elems[2] = this->bounding_box.max.z - this->camera_pos_z;
+//################# HIBAS !!! ####################
+	srv1.request.BoundingMin.elems[0] = this->bounding_box.min.x
+			- this->camera_pos_x; //this->process_offset;
+	srv1.request.BoundingMin.elems[1] = this->bounding_box.min.y
+			- this->camera_pos_y; //this->process_offset;
+	srv1.request.BoundingMin.elems[2] = this->bounding_box.min.z
+			- this->camera_pos_z; //this->process_offset;
 
-	std::cerr << "MIN SRV: " << srv1.request.BoundingMin.elems[0] << " "
+	srv1.request.BoundingMax.elems[0] = this->bounding_box.max.x
+			- this->camera_pos_x; //this->process_offset;
+	srv1.request.BoundingMax.elems[1] = this->bounding_box.max.y
+			- this->camera_pos_y; //this->process_offset;
+	srv1.request.BoundingMax.elems[2] = this->bounding_box.max.z
+			- this->camera_pos_z; //+ this->process_offset;
+	//################# HIBAS !!! ####################
+
+	std::cerr << "MIN BOUNDING SRV BEFORE: "
+			<< srv1.request.BoundingMin.elems[0] << " "
 			<< srv1.request.BoundingMin.elems[1] << " "
 			<< srv1.request.BoundingMin.elems[2] << std::endl;
 
-	std::cerr << "MAX SRV: " << srv1.request.BoundingMax.elems[0] << " "
-			<< srv1.request.BoundingMax.elems[1] << " "
+	std::cerr << "MAX BOUNDING SRV AFTER: " << srv1.request.BoundingMax.elems[0]
+			<< " " << srv1.request.BoundingMax.elems[1] << " "
 			<< srv1.request.BoundingMax.elems[2] << std::endl;
+
+	float aux_bounding;
+
+	//#################### HACK ##########################//
+	aux_bounding = -srv1.request.BoundingMin.elems[1];
+	srv1.request.BoundingMin.elems[1] = -srv1.request.BoundingMax.elems[1];
+	srv1.request.BoundingMax.elems[1] = aux_bounding;
+
+	aux_bounding = -srv1.request.BoundingMin.elems[2];
+	srv1.request.BoundingMin.elems[2] = -srv1.request.BoundingMax.elems[2];
+	srv1.request.BoundingMax.elems[2] = aux_bounding;
+
+	std::cerr << "MIN BOUNDING SRV: " << srv1.request.BoundingMin.elems[0]
+			<< " " << srv1.request.BoundingMin.elems[1] << " "
+			<< srv1.request.BoundingMin.elems[2] << std::endl;
+
+	std::cerr << "MAX BOUNDING SRV: " << srv1.request.BoundingMax.elems[0]
+			<< " " << srv1.request.BoundingMax.elems[1] << " "
+			<< srv1.request.BoundingMax.elems[2] << std::endl;
+	//#################### HACK ##########################//
 
 //	std::cerr << std::endl;
 //
