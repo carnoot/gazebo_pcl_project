@@ -184,22 +184,53 @@ int PclProcesser::PointsInBoundingBoxManual(
 
 	pcl::PointCloud<PointType>::Ptr temp_cloud_PTR(
 			new pcl::PointCloud<PointType>(cloud_to_proc));
+	pcl::PointCloud<PointType>::Ptr to_remove_radius_cloud(
+			new pcl::PointCloud<PointType>);
 
-	this->PlaneSegmentationExtraction(temp_cloud_PTR);
+	pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
 
-	std::cerr << "DONE" << std::endl;
+//	this->PlaneSegmentationExtraction(temp_cloud_PTR);
+
+//	std::cerr << "DONE" << std::endl;
 
 //	this->DisplayPoints(this->cloud_to_process);
 
-	pcl::getMinMax3D(this->filtered_cloud, min_point, max_point);
+//	pcl::getMinMax3D(this->filtered_cloud, min_point, max_point);
+//
+//	std::cerr << "min PointCloud values: " << min_point << std::endl;
+//	std::cerr << "max PointCloud values: " << max_point << std::endl;
+
+//################## MAJDNEM JO #########################//
+
+//	pcl::transformPointCloud(this->filtered_cloud,
+//			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
+//
+//	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
+//
+//	std::cerr << "min Rotated Axis PointCloud values: " << min_point
+//			<< std::endl;
+//	std::cerr << "max Rotated Axis PointCloud values: " << max_point
+//			<< std::endl;
+//
+//	pcl::transformPointCloud(this->rotated_axis_cloud_to_process,
+//			this->rotated_cloud_to_process, this->transform_matrix);
+//
+//	pcl::getMinMax3D(this->rotated_cloud_to_process, min_point, max_point);
+//
+//	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
+//	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
+
+//################## MAJDNEM JO #########################//
+
+//################## MAJDNEM JO #########################//
+
+	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
 
 	std::cerr << "min PointCloud values: " << min_point << std::endl;
 	std::cerr << "max PointCloud values: " << max_point << std::endl;
 
-	//################## MAJDNEM JO #########################//
-
-	pcl::transformPointCloud(this->filtered_cloud,
-			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
+	pcl::transformPointCloud(cloud_to_proc, this->rotated_axis_cloud_to_process,
+			this->transform_matrix_axis);
 
 	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
 
@@ -216,7 +247,7 @@ int PclProcesser::PointsInBoundingBoxManual(
 	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
 	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
 
-	//################## MAJDNEM JO #########################//
+//################## MAJDNEM JO #########################//
 
 //	pcl::transformPointCloud(this->filtered_cloud,
 //			this->rotated_cloud_to_process, this->transform_matrix);
@@ -241,12 +272,14 @@ int PclProcesser::PointsInBoundingBoxManual(
 //			this->rotated_cloud_to_process, this->transform_matrix);
 //
 //
-	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
+//	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
 
 //	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
 //
 //	std::cerr << "min PointCloud values: " << min_point << std::endl;
 //	std::cerr << "max PointCloud values: " << max_point << std::endl;
+
+	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
 
 	for (int i = 0; i < this->rotated_cloud_to_process.size(); i++) {
 
@@ -273,20 +306,22 @@ int PclProcesser::PointsInBoundingBoxManual(
 			this->z_axis_ok = true;
 		}
 
-		if (this->x_axis_ok) {
-			std::cerr << "X OK ";
-		}
-
-		if (this->y_axis_ok) {
-			std::cerr << "Y OK ";
-		}
-
-		if (this->z_axis_ok) {
-			std::cerr << "Z OK " << std::endl;
-		}
+//		if (this->x_axis_ok) {
+//			std::cerr << "X OK ";
+//		}
+//
+//		if (this->y_axis_ok) {
+//			std::cerr << "Y OK ";
+//		}
+//
+//		if (this->z_axis_ok) {
+//			std::cerr << "Z OK " << std::endl;
+//		}
 
 		if (this->x_axis_ok && this->y_axis_ok && this->z_axis_ok) {
 			points_inside++;
+			inliers->indices.resize(points_inside);
+			inliers->indices.push_back(i);
 		}
 
 		this->x_axis_ok = false;
@@ -311,6 +346,15 @@ int PclProcesser::PointsInBoundingBoxManual(
 //			points_inside++;
 //		}
 	}
+
+	pcl::ExtractIndices<PointType> extractor;
+
+	extractor.setInputCloud(temp_cloud_PTR);
+	extractor.setIndices(inliers);
+	extractor.setNegative(false);
+	extractor.filter(*to_remove_radius_cloud);
+
+	pcl::io::savePCDFile("/home/furdek/kinect_sim_final.pcd", *to_remove_radius_cloud);
 
 	return points_inside;
 
@@ -478,7 +522,8 @@ int main(int argc, char **argv) {
 		if (processer.can_process == true) {
 			std::cerr << "processing" << std::endl;
 
-//			pcl::io::savePCDFile("/home/furdek/kinect_test.pcd", processer.cloud_to_process);
+			pcl::io::savePCDFile("/home/furdek/kinect_test.pcd",
+					processer.cloud_to_process);
 
 //			std::cerr
 //					<< processer.PointsInBoundingBoxPcl(
