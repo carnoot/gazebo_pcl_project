@@ -82,14 +82,17 @@ void MoveCamera::Load(physics::ModelPtr _parent, sdf::ElementPtr _element) {
 	this->service = n.advertiseService("get_camera_position",
 			&MoveCamera::GetCameraPosition, this);
 
-	this->client = n.serviceClient<gazebo_pkg::ObjectInspectionCloud>(
+	this->get_cloud_client = n.serviceClient<gazebo_pkg::ObjectInspectionCloud>(
 			"get_cloud");
 
-	this->client_1 = n.serviceClient<gazebo_pkg::ObjectInspectionCameraPos>(
-			"pass_camera_position");
+	this->pass_camera_position_client = n.serviceClient<
+			gazebo_pkg::ObjectInspectionCameraPos>("pass_camera_position");
 
 	this->cam_quaternion_client = n.serviceClient<
 			gazebo_pkg::ObjectInspectionQuaternion>("get_cam_quaternion");
+
+//	this->object_number_client = n.serviceClient<
+//			gazebo_pkg::ObjectInspectionNumber>("object_to_inspect");
 
 //	this->sub = n.subscribe("/camera/depth/points", 1000,
 //			&MoveCamera::SaveClouds, this);
@@ -152,16 +155,25 @@ bool MoveCamera::GetCameraPosition(
 
 	std::cout << "Camera Position Ready" << std::endl;
 
-	gazebo_pkg::ObjectInspectionCameraPos srv;
-	srv.request.cameraPos.elems[0] = this->look_at_pos_x;
-	srv.request.cameraPos.elems[1] = this->look_at_pos_y;
-	srv.request.cameraPos.elems[2] = this->look_at_pos_z;
+	gazebo_pkg::ObjectInspectionCameraPos pass_camera_position_srv;
+	pass_camera_position_srv.request.cameraPos.elems[0] = this->look_at_pos_x;
+	pass_camera_position_srv.request.cameraPos.elems[1] = this->look_at_pos_y;
+	pass_camera_position_srv.request.cameraPos.elems[2] = this->look_at_pos_z;
+//	srv.request.objectNum = req.objectNum;
 
-	if (this->client_1.call(srv)) {
-		ROS_INFO("OK!");
+	if (this->pass_camera_position_client.call(pass_camera_position_srv)) {
+		ROS_INFO("Camera Position Sent!");
 	} else {
-		ROS_ERROR("Not OK!");
+		ROS_ERROR("Camera Position NOT Sent!");
 	}
+
+//	gazebo_pkg::ObjectInspectionNumber srv_object_number;
+//	srv_object_number.request.number = req.objectNum;
+//	if (this->object_number_client.call(srv_object_number)) {
+//		ROS_INFO("Object Number Sent!");
+//	} else {
+//		ROS_ERROR("Object Number NOT Sent!");
+//	}
 
 	this->msgToSend.set_pos_x(this->look_at_pos_x);
 	this->msgToSend.set_pos_y(this->look_at_pos_y);
@@ -385,7 +397,8 @@ void MoveCamera::SetCameraPosition() {
 
 	this->model->SetWorldPose(this->newPos);
 
-	std::cout << "World pose after Ready: " << this->model->GetWorldPose() << std::endl;
+	std::cout << "World pose after Ready: " << this->model->GetWorldPose()
+			<< std::endl;
 
 //	this->model->SetLinkWorldPose(this->probaPos, this->cameraLinkName);
 
@@ -524,19 +537,27 @@ void MoveCamera::OnUpdate() {
 
 		this->SetCameraPosition();
 
-		gazebo_pkg::ObjectInspectionQuaternion quat;
-		quat.request.camQuaternion.elems[0] = (float)this->look_at_w;
-		quat.request.camQuaternion.elems[1] = (float)this->look_at_x;
-		quat.request.camQuaternion.elems[2] = (float)this->look_at_y;
-		quat.request.camQuaternion.elems[3] = (float)this->look_at_z;
+		gazebo_pkg::ObjectInspectionQuaternion cam_quaternion_srv;
+		cam_quaternion_srv.request.camQuaternion.elems[0] =
+				(float) this->look_at_w;
+		cam_quaternion_srv.request.camQuaternion.elems[1] =
+				(float) this->look_at_x;
+		cam_quaternion_srv.request.camQuaternion.elems[2] =
+				(float) this->look_at_y;
+		cam_quaternion_srv.request.camQuaternion.elems[3] =
+				(float) this->look_at_z;
 
-		std::cerr << "QUATERNION TO SEND: " << quat.request.camQuaternion.elems[0] << " " << quat.request.camQuaternion.elems[1] << " "
-				<< quat.request.camQuaternion.elems[2] << " " << quat.request.camQuaternion.elems[3] << std::endl;
+		std::cerr << "QUATERNION TO SEND: "
+				<< cam_quaternion_srv.request.camQuaternion.elems[0] << " "
+				<< cam_quaternion_srv.request.camQuaternion.elems[1] << " "
+				<< cam_quaternion_srv.request.camQuaternion.elems[2] << " "
+				<< cam_quaternion_srv.request.camQuaternion.elems[3]
+				<< std::endl;
 
-		if (this->cam_quaternion_client.call(quat)) {
-			ROS_INFO("QUAT OK!");
+		if (this->cam_quaternion_client.call(cam_quaternion_srv)) {
+			ROS_INFO("Cam Quaternion Sent!");
 		} else {
-			ROS_ERROR("QUAT Not OK!");
+			ROS_ERROR("Cam Quaternion NOT Sent!");
 		}
 
 		this->orientation_ready = false;
@@ -546,16 +567,14 @@ void MoveCamera::OnUpdate() {
 
 	if (this->get_cloud_ready) {
 		this->delay++;
-//		std::cout << this->delay << std::endl;
 	}
 
-	if (this->get_cloud_ready && this->delay > 1000) {
-		std::cerr << "SAVE CLOUD NOW!" << std::endl;
-		gazebo_pkg::ObjectInspectionCloud srv;
-		if (this->client.call(srv)) {
-			ROS_INFO("OK!");
+	if (this->get_cloud_ready && this->delay > 2000) {
+		gazebo_pkg::ObjectInspectionCloud get_cloud_srv;
+		if (this->get_cloud_client.call(get_cloud_srv)) {
+			ROS_INFO("Got Cloud!");
 		} else {
-			ROS_ERROR("Not OK!");
+			ROS_ERROR("Could NOT Get Cloud!");
 		}
 		this->get_cloud_ready = false;
 		this->delay = 0;

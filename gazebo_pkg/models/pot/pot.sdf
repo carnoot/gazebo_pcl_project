@@ -19,6 +19,7 @@
                 <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
                 <geometry>
                     <mesh>
+                        <!--<uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pot/meshes/pot.stl</uri>--> 
                         <uri>model://pot/meshes/pot.stl</uri>
                         <scale>1 1 1</scale>
                     </mesh>
@@ -54,6 +55,7 @@
                 <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
                 <geometry>
                     <mesh>
+                        <!--<uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pot/meshes/pot.dae</uri>--> 
                         <uri>model://pot/meshes/pot.dae</uri>
                         <scale>1 1 1</scale>
                     </mesh>

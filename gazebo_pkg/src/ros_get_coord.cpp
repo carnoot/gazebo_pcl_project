@@ -19,6 +19,9 @@ RosGetCoord::RosGetCoord() {
 	this->service_2 = n.advertiseService("pass_camera_position",
 			&RosGetCoord::PassCameraPosition, this);
 
+	this->service_3 = n.advertiseService("pass_object_center",
+			&RosGetCoord::PassObjectCenter, this);
+
 	this->process_offset = 10;
 
 	ROS_INFO("Waiting for coordinates!");
@@ -31,6 +34,28 @@ void RosGetCoord::OnUpdate() {
 //	for (int i = 0; i < this->parent->GetModelCount(); i++){
 //	std::cerr << this->parent->GetModel(i)->GetName() << std::endl;
 //	}
+
+}
+
+bool RosGetCoord::PassObjectCenter(
+		gazebo_pkg::ObjectInspectionStart::Request &req,
+		gazebo_pkg::ObjectInspectionStart::Response &res) {
+
+	int nr = req.number;
+
+	boost::shared_ptr<gazebo::physics::Model> model_ptr =
+			this->parent->GetModel(nr);
+	physics::ModelPtr my_model = this->parent->GetModel(nr);
+
+	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
+			model_ptr->GetBoundingBox().max);
+	this->object_center.resize(3);
+
+	res.centerPoint.elems[0] = this->bounding_box.GetCenter().x;
+	res.centerPoint.elems[1] = this->bounding_box.GetCenter().y;
+	res.centerPoint.elems[2] = this->bounding_box.GetCenter().z;
+
+	return true;
 
 }
 
@@ -69,6 +94,10 @@ bool RosGetCoord::ObjectToInspect(
 	this->object_center[1] = this->bounding_box.GetCenter().y;
 	this->object_center[2] = this->bounding_box.GetCenter().z;
 
+	res.centerPoint.elems[0] = this->bounding_box.GetCenter().x;
+	res.centerPoint.elems[1] = this->bounding_box.GetCenter().y;
+	res.centerPoint.elems[2] = this->bounding_box.GetCenter().z;
+
 	std::cout << "GOT BOUNDING BOX && CENTER" << std::endl;
 
 	ros::NodeHandle n;
@@ -89,14 +118,6 @@ bool RosGetCoord::ObjectToInspect(
 	} else {
 		ROS_ERROR("Object Center Sending Failed!");
 	}
-
-//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
-//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
-//			<< std::endl;
-//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
-//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
-//			<< std::endl;
-//
 
 	std::cerr << "REAL BOUNDING MIN: " << this->bounding_box.min.x << " "
 			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
@@ -413,6 +434,23 @@ std::string RosGetCoord::CreateMaterialColor(gazebo_pkg::Object obj) {
 
 }
 
+std::string RosGetCoord::CreateMesh(gazebo_pkg::Object obj) {
+	std::string localString;
+
+	localString.append("<mesh>\n");
+	localString.append("<uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/");
+	localString.append(obj.SHAPE);
+	localString.append("/meshes/");
+	localString.append(obj.SHAPE);
+	localString.append(".stl");
+	localString.append("</uri>\n");
+	localString.append("<scale>1 1 1</scale>\n");
+	localString.append("</mesh>");
+
+	return localString;
+
+}
+
 void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 
 	sdf::SDF shapeSDF;
@@ -427,12 +465,23 @@ void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 	TextSdf.append(
 			"<link name ='link'>\n<collision name ='collision'>\n<geometry>");
 
-	TextSdf.append(RosGetCoord::CreateGeometry(obj));
+	if (obj.MESH) {
 
-	TextSdf.append(
-			"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
+		TextSdf.append(this->CreateMesh(obj));
+		TextSdf.append(
+				"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
+		TextSdf.append(this->CreateMesh(obj));
 
-	TextSdf.append(RosGetCoord::CreateGeometry(obj));
+	} else {
+
+		TextSdf.append(RosGetCoord::CreateGeometry(obj));
+
+		TextSdf.append(
+				"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
+
+		TextSdf.append(RosGetCoord::CreateGeometry(obj));
+
+	}
 
 	TextSdf.append("</geometry>\n");
 	TextSdf.append(RosGetCoord::CreateMaterialColor(obj));

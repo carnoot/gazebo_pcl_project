@@ -15,6 +15,9 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->get_cam_quaternion = n.advertiseService("get_cam_quaternion",
 			&PclProcesser::GetCamQuaternion, this);
 
+	this->can_send_next_pos = n.serviceClient<
+			gazebo_pkg::ObjectCanSendNextCamPos>("get_can_send_next_cam_pos");
+
 	this->can_process = false;
 	this->x_axis_ok = false;
 	this->y_axis_ok = false;
@@ -22,6 +25,8 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 
 	this->transform_matrix = Eigen::Matrix4f::Identity();
 	this->transform_matrix_axis = Eigen::Matrix4f::Identity();
+
+	this->clouds_processed = 0;
 
 	ROS_INFO("Ready to process clouds!");
 
@@ -354,7 +359,14 @@ int PclProcesser::PointsInBoundingBoxManual(
 	extractor.setNegative(false);
 	extractor.filter(*to_remove_radius_cloud);
 
-	pcl::io::savePCDFile("/home/furdek/kinect_sim_final.pcd", *to_remove_radius_cloud);
+	if (to_remove_radius_cloud->size())
+	pcl::io::savePCDFile("/home/furdek/kinect_sim_final.pcd",
+			*to_remove_radius_cloud);
+
+	this->clouds_processed++;
+	std::cout << this->clouds_processed << std::endl;
+	this->result_vect.resize(this->clouds_processed);
+	this->result_vect.push_back(points_inside);
 
 	return points_inside;
 
@@ -437,6 +449,13 @@ void PclProcesser::SaveClouds(
 
 }
 
+void PclProcesser::DisplayResults(){
+	for (int i = 0; i < this->result_vect.size(); i++){
+		std::cerr << this->result_vect[i] << " ";
+	}
+	std::cerr << std::endl;
+}
+
 bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 		gazebo_pkg::ObjectInspectionCloud::Response &res) {
 
@@ -444,8 +463,8 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 
 //    this->mut.lock();
 	this->cloud_to_process = this->cloud;
-	pcl::PCDWriter writer;
-	writer.write("/home/furdek/kinect_test.pcd", this->cloud_to_process);
+//	pcl::PCDWriter writer;
+//	writer.write("/home/furdek/kinect_test.pcd", this->cloud_to_process);
 	this->can_process = true;
 //    this->mut.unlock();
 
@@ -532,6 +551,16 @@ int main(int argc, char **argv) {
 			std::cerr
 					<< processer.PointsInBoundingBoxManual(
 							processer.cloud_to_process) << std::endl;
+
+			gazebo_pkg::ObjectCanSendNextCamPos object_can_send_srv;
+			if (processer.can_send_next_pos.call(object_can_send_srv)) {
+				ROS_INFO("OK!");
+			} else {
+				ROS_ERROR("Not OK!");
+				return 1;
+			}
+
+			processer.DisplayResults();
 
 			processer.can_process = false;
 		}

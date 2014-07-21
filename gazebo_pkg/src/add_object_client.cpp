@@ -34,6 +34,7 @@ int main(int argc, char **argv) {
 	obj.COLOR = "green";
 	obj.ID = 1;
 	obj.SHAPE = "box";
+	obj.MESH = false;
 	obj.SIZE = boxSizeVect;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -6.06;
@@ -49,6 +50,7 @@ int main(int argc, char **argv) {
 	obj.COLOR = "blue";
 	obj.ID = 2;
 	obj.SHAPE = "cylinder";
+	obj.MESH = false;
 	obj.SIZE = cylinderSizeVect;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -6.8;
@@ -64,9 +66,26 @@ int main(int argc, char **argv) {
 	obj.COLOR = "red";
 	obj.ID = 3;
 	obj.SHAPE = "sphere";
+	obj.MESH = false;
 	obj.SIZE = sphereSizeVect;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -5.3;
+	obj.pose.position.z = 3;
+
+	obj.pose.orientation.w = 1;
+	obj.pose.orientation.x = 0;
+	obj.pose.orientation.y = 0;
+	obj.pose.orientation.z = 0;
+
+	test_vect.push_back(obj);
+
+	obj.COLOR = "blue";
+	obj.ID = 4;
+	obj.SHAPE = "pot";
+	obj.MESH = true;
+	obj.SIZE = sphereSizeVect;
+	obj.pose.position.x = -2.67;
+	obj.pose.position.y = -4.8;
 	obj.pose.position.z = 3;
 
 	obj.pose.orientation.w = 1;

@@ -50,6 +50,8 @@ add_service_files(
 	ObjectInspectionCameraPos.srv
 	ObjectInspectionCloud.srv
 	ObjectInspectionQuaternion.srv
+	ObjectCanSendNextCamPos.srv
+	ObjectInspectionStart.srv
 )
 
 generate_messages(   
@@ -247,3 +249,6 @@ target_link_libraries(add_object_inspection_camera_pos ${catkin_LIBRARIES} ${PCL
 
 add_executable(pcl_processing_module src/pcl_processing_module.cpp)
 target_link_libraries(pcl_processing_module ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${GAZEBO_LIBRARIES})
+
+add_executable(vfh_test src/vfh_test.cpp)
+target_link_libraries(vfh_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})

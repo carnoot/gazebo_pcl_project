@@ -1,4 +1,3 @@
-
 #ifndef PCL_PROCESSING_MODULE_H
 #define PCL_PROCESSING_MODULE_H
 
@@ -8,6 +7,7 @@
 #include "gazebo_pkg/ObjectInspectionCloud.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionQuaternion.h"
+#include "gazebo_pkg/ObjectCanSendNextCamPos.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include "pcl/pcl_base.h"
 #include "pcl/io/pcd_io.h"
@@ -50,9 +50,12 @@ public:
     int PointsInBoundingBoxPcl(pcl::PointCloud<PointType>);
     void PlaneSegmentationExtraction(const pcl::PointCloud<PointType>::Ptr);
     void DisplayPoints(pcl::PointCloud<PointType> &);
+    void DisplayResults();
 
 public:
 
+    std::vector<int> result_vect;
+    int clouds_processed;
     float bounding_min[3];
     float bounding_max[3];
     Eigen::Vector4f min_pt;
@@ -63,6 +66,7 @@ public:
     ros::ServiceServer service;
     ros::ServiceServer service_1;
     ros::ServiceServer get_cam_quaternion;
+    ros::ServiceClient can_send_next_pos;
     ros::Subscriber sub;
     pcl::PointCloud<PointType> cloud;
     pcl::PointCloud<PointType> cloud_to_process;

@@ -12,6 +12,7 @@
 #include "gazebo_pkg/ObjectInspectionCenter.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionCameraPos.h"
+#include "gazebo_pkg/ObjectInspectionStart.h"
 #include <cstdlib>
 #include <sstream>
 #include <vector>
@@ -37,21 +38,23 @@ public:
 
 public:
 	bool GetObjects(gazebo_pkg::GetObject::Request &req,
-			gazebo_pkg::GetObject::Response &res);
-	bool ObjectToInspect(gazebo_pkg::ObjectInspectionNumber::Request &,
-			gazebo_pkg::ObjectInspectionNumber::Response &);
+			gazebo_pkg::GetObject::Response &res);bool ObjectToInspect(
+			gazebo_pkg::ObjectInspectionNumber::Request &,
+			gazebo_pkg::ObjectInspectionNumber::Response &);bool PassObjectCenter(
+			gazebo_pkg::ObjectInspectionStart::Request &,
+			gazebo_pkg::ObjectInspectionStart::Response &);
 
 public:
-	std::string CreatePositionString(gazebo_pkg::Object obj);
-	std::string CreateModelNameString(gazebo_pkg::Object obj);
-	std::string CreateMaterialColor(gazebo_pkg::Object obj);
-	std::string CreateOrientationString(gazebo_pkg::Object obj);
-	std::string CreateGeometry(gazebo_pkg::Object obj);
+	std::string CreatePositionString(gazebo_pkg::Object);
+	std::string CreateModelNameString(gazebo_pkg::Object);
+	std::string CreateMaterialColor(gazebo_pkg::Object);
+	std::string CreateOrientationString(gazebo_pkg::Object);
+	std::string CreateGeometry(gazebo_pkg::Object);
+	std::string CreateMesh(gazebo_pkg::Object);
 	void CreateShape(gazebo_pkg::Object);
-	std::vector<float> QuaternionToEuler(float w, float x,
-			float y, float z);
-	std::string ConvertFloat(float a);
-	bool PassCameraPosition(gazebo_pkg::ObjectInspectionCameraPos::Request &,
+	std::vector<float> QuaternionToEuler(float, float, float, float);
+	std::string ConvertFloat(float);bool PassCameraPosition(
+			gazebo_pkg::ObjectInspectionCameraPos::Request &,
 			gazebo_pkg::ObjectInspectionCameraPos::Response &);
 	void OnUpdate();
 
@@ -62,6 +65,7 @@ public:
 	ros::ServiceServer service;
 	ros::ServiceServer service_1;
 	ros::ServiceServer service_2;
+	ros::ServiceServer service_3;
 	event::ConnectionPtr updateConnection;
 
 private:
@@ -72,8 +76,7 @@ private:
 	float process_offset;
 
 	math::Box bounding_box;
-	std::vector<float> object_center;
-	bool primit_coord;
+	std::vector<float> object_center;bool primit_coord;
 
 private:
 	physics::WorldPtr parent;

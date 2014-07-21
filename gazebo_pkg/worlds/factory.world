@@ -20,6 +20,10 @@
     <include>
       <uri>model://box1</uri>
     </include>
+    
+    <include>
+      <uri>model://box_wall</uri>
+    </include>
         
     <plugin name="factory_world_plugin_1" filename="libros_get_coord.so"/>
     <plugin name="factory_world_plugin_2" filename="libros_plugin.so"/>

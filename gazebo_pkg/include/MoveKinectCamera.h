@@ -126,9 +126,10 @@ private:
 public:
 	ros::ServiceServer service;
 	ros::ServiceServer service_1;
-	ros::ServiceClient client;
-	ros::ServiceClient client_1;
+	ros::ServiceClient get_cloud_client;
+	ros::ServiceClient pass_camera_position_client;
 	ros::ServiceClient cam_quaternion_client;
+	ros::ServiceClient object_number_client;
 	ros::Subscriber sub;
 	event::ConnectionPtr updateConnection;
 	transport::NodePtr receiveNode;
