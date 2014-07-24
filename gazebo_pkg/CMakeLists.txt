@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(gazebo_pkg)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x  -Wno-deprecated -DBT_USE_DOUBLE_PRECISION")
-set(CMAKE_BUILD_TYPE Debug)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -252,3 +252,6 @@ target_link_libraries(pcl_processing_module ${catkin_LIBRARIES} ${PCL_LIBRARIES}
 
 add_executable(vfh_test src/vfh_test.cpp)
 target_link_libraries(vfh_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(ml_classifier_client_test src/ml_classifier_client_test.cpp)
+target_link_libraries(ml_classifier_client_test ${catkin_LIBRARIES})
