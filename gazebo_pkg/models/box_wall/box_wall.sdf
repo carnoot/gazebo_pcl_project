@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<sdf version="1.4">
+    <model name="box_wall">
+    
+      <pose>-2.5 -6 1.45 0 0 0</pose>
+      <static>true</static>
+      
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.1 0.3 1</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="boxVisual">
+          <geometry>
+            <box>
+              <size>0.1 0.3 1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      
+    </model> 
+</sdf>
