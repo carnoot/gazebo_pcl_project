@@ -52,6 +52,7 @@ public:
 	std::string CreateGeometry(gazebo_pkg::Object);
 	std::string CreateMesh(gazebo_pkg::Object);
 	void CreateShape(gazebo_pkg::Object);
+	std::string AddStaticAttribute(bool);
 	std::vector<float> QuaternionToEuler(float, float, float, float);
 	std::string ConvertFloat(float);bool PassCameraPosition(
 			gazebo_pkg::ObjectInspectionCameraPos::Request &,
@@ -67,6 +68,9 @@ public:
 	ros::ServiceServer service_2;
 	ros::ServiceServer service_3;
 	event::ConnectionPtr updateConnection;
+
+	std::pair<int, std::string> object_pair;
+	std::vector<std::pair<int, std::string>> pair_values;
 
 private:
 

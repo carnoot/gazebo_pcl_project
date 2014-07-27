@@ -18,6 +18,9 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->can_send_next_pos = n.serviceClient<
 			gazebo_pkg::ObjectCanSendNextCamPos>("get_can_send_next_cam_pos");
 
+	this->get_classifier = n.advertiseService("get_classifier",
+			&PclProcesser::GetClassifier, this);
+
 	this->can_process = false;
 	this->x_axis_ok = false;
 	this->y_axis_ok = false;
@@ -27,6 +30,8 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->transform_matrix_axis = Eigen::Matrix4f::Identity();
 
 	this->clouds_processed = 0;
+	this->contor = 0;
+	this->get_best_positions = false;
 
 	ROS_INFO("Ready to process clouds!");
 
@@ -36,15 +41,20 @@ PclProcesser::~PclProcesser() {
 
 }
 
+bool PclProcesser::GetClassifier(
+		gazebo_pkg::ObjectInspectionClassifier::Request &req,
+		gazebo_pkg::ObjectInspectionClassifier::Response &res) {
+
+	this->my_classifier = req.classifier;
+	return (true);
+
+}
+
 bool PclProcesser::GetCamQuaternion(
 		gazebo_pkg::ObjectInspectionQuaternion::Request &req,
 		gazebo_pkg::ObjectInspectionQuaternion::Response &res) {
 
 	gazebo::math::Matrix4 aux_matrix;
-
-//	this->cam_quaternion.Set(req.camQuaternion.elems[0],
-//			req.camQuaternion.elems[1], req.camQuaternion.elems[2],
-//			req.camQuaternion.elems[3]);
 
 	std::cerr << "QUATERNION RECEIVED REQ: " << req.camQuaternion.elems[0]
 			<< " " << req.camQuaternion.elems[1] << " "
@@ -159,6 +169,39 @@ bool PclProcesser::GetObjectBounding(
 
 }
 
+void PclProcesser::FindMaxElements(int nr_of_max_needed) {
+
+	std::cerr << "Find Max Elements" << std::endl;
+
+	this->best_positions.clear();
+	this->best_positions_indexes.clear();
+
+	int nr_of_max_found = 0;
+	while (nr_of_max_found != nr_of_max_needed) {
+
+		int max = 0;
+		int index = 0;
+
+		for (int i = 0; i < this->result_vect.size(); i++) {
+			if (this->result_vect[i] > max) {
+				max = this->result_vect[i];
+				this->best_positions_indexes.push_back(i);
+				index = i;
+			}
+		}
+		this->best_positions.reserve(nr_of_max_needed);
+		this->best_positions.push_back(max);
+		this->result_vect.erase(this->result_vect.begin() + index);
+		nr_of_max_found++;
+	}
+
+	std::cerr << "max elements: ";
+	for (int j = 0; j < nr_of_max_found; j++) {
+		std::cerr << this->best_positions[j] << " ";
+	}
+
+}
+
 void PclProcesser::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 
 	PointType point;
@@ -173,6 +216,18 @@ void PclProcesser::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 					<< point.z << std::endl;
 		}
 
+	}
+}
+
+void PclProcesser::SaveCloudPCDs() {
+	std::string orig_path;
+	orig_path = "/home/furdek/final_test/";
+	for (int i = 0; i < this->clouds_to_process_vect.size(); i++) {
+		std::string updated_path;
+		updated_path.append(orig_path);
+		updated_path.append(std::to_string(i));
+		updated_path.append(".pcd");
+		pcl::io::savePCDFile(updated_path, this->clouds_to_process_vect[i]);
 	}
 }
 
@@ -297,35 +352,25 @@ int PclProcesser::PointsInBoundingBoxManual(
 //					<< point.z << std::endl;
 //		}
 
-		if ((point.x >= this->bounding_min[0])
-				&& (point.x <= this->bounding_max[0])) {
+		float correction = 0.02;
+
+		if ((point.x >= this->bounding_min[0] - correction)
+				&& (point.x <= this->bounding_max[0] + correction)) {
 			this->x_axis_ok = true;
 		}
-		if ((point.y >= this->bounding_min[1])
-				&& (point.y <= this->bounding_max[1])) {
+		if ((point.y >= this->bounding_min[1] - correction)
+				&& (point.y <= this->bounding_max[1] + correction)) {
 			this->y_axis_ok = true;
 
 		}
-		if ((point.z >= this->bounding_min[2])
-				&& (point.z <= this->bounding_max[2])) {
+		if ((point.z >= this->bounding_min[2] - correction)
+				&& (point.z <= this->bounding_max[2] + correction)) {
 			this->z_axis_ok = true;
 		}
 
-//		if (this->x_axis_ok) {
-//			std::cerr << "X OK ";
-//		}
-//
-//		if (this->y_axis_ok) {
-//			std::cerr << "Y OK ";
-//		}
-//
-//		if (this->z_axis_ok) {
-//			std::cerr << "Z OK " << std::endl;
-//		}
-
 		if (this->x_axis_ok && this->y_axis_ok && this->z_axis_ok) {
 			points_inside++;
-			inliers->indices.resize(points_inside);
+			inliers->indices.reserve(points_inside);
 			inliers->indices.push_back(i);
 		}
 
@@ -359,13 +404,21 @@ int PclProcesser::PointsInBoundingBoxManual(
 	extractor.setNegative(false);
 	extractor.filter(*to_remove_radius_cloud);
 
-	if (to_remove_radius_cloud->size())
-	pcl::io::savePCDFile("/home/furdek/kinect_sim_final.pcd",
-			*to_remove_radius_cloud);
+	if (to_remove_radius_cloud->size()){
+		this->contor++;
+		std::cerr << "contor: " << this->contor << std::endl;
+		std::string local_string;
+		local_string.append("/home/furdek/kinect_sim_final");
+		local_string.append(std::to_string(this->contor));
+		local_string.append(".pcd");
+		std::cerr << "path to save to: " << local_string << std::endl;
+		pcl::io::savePCDFile(local_string,
+				*to_remove_radius_cloud);
+	}
 
 	this->clouds_processed++;
 	std::cout << this->clouds_processed << std::endl;
-	this->result_vect.resize(this->clouds_processed);
+	this->result_vect.reserve(this->clouds_processed);
 	this->result_vect.push_back(points_inside);
 
 	return points_inside;
@@ -441,16 +494,11 @@ int PclProcesser::PointsInBoundingBoxPcl(pcl::PointCloud<PointType> cloud) {
 
 void PclProcesser::SaveClouds(
 		const sensor_msgs::PointCloud2::ConstPtr &message) {
-
-//	std::cout << "In SaveClouds Callback!" << std::endl;
-//    this->mut.lock();
 	pcl::fromROSMsg(*message, this->cloud);
-//    this->mut.unlock();
-
 }
 
-void PclProcesser::DisplayResults(){
-	for (int i = 0; i < this->result_vect.size(); i++){
+void PclProcesser::DisplayResults() {
+	for (int i = 0; i < this->result_vect.size(); i++) {
 		std::cerr << this->result_vect[i] << " ";
 	}
 	std::cerr << std::endl;
@@ -461,19 +509,19 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 
 	std::cout << "GetCloud" << std::endl;
 
-//    this->mut.lock();
-	this->cloud_to_process = this->cloud;
-//	pcl::PCDWriter writer;
-//	writer.write("/home/furdek/kinect_test.pcd", this->cloud_to_process);
 	this->can_process = true;
-//    this->mut.unlock();
 
-//    std::cout << "Points inside box:" << this->PointsInBoundingBoxManual() << std::endl;
-//    this->DisplayPoints();
-//    pcl::io::savePCDFile("/home/furdek/SIM_CLOUD_FINAL.pcd",this->cloud_to_process);
-
-//    pcl::fromROSMsg(req.kinect_cloud, *this->cloud);
-//    std::cout << this->cloud->points.size() << std::endl;
+	if (!req.can_get_best_positions) {
+		this->cloud_to_process = this->cloud;
+		this->clouds_to_process_vect.push_back(this->cloud_to_process);
+		this->get_best_positions = false;
+	} else {
+		this->get_best_positions = true;
+	}
+	std::cerr << "clouds_to_process_vect size: "
+			<< this->clouds_to_process_vect.size() << std::endl;
+	std::cerr << "get_best_positions set to: " << this->get_best_positions
+			<< std::endl;
 
 	return true;
 }
@@ -533,37 +581,33 @@ int main(int argc, char **argv) {
 	ros::AsyncSpinner *spinner = new ros::AsyncSpinner(1);
 	spinner->start();
 
-//	ros::spin();
 	while (ros::ok()) {
-//		std::cerr << "while" << std::endl;
 
-//		ros::spinOnce();
 		if (processer.can_process == true) {
 			std::cerr << "processing" << std::endl;
-
-			pcl::io::savePCDFile("/home/furdek/kinect_test.pcd",
-					processer.cloud_to_process);
-
-//			std::cerr
-//					<< processer.PointsInBoundingBoxPcl(
-//							processer.cloud_to_process) << std::endl;
 
 			std::cerr
 					<< processer.PointsInBoundingBoxManual(
 							processer.cloud_to_process) << std::endl;
 
-			gazebo_pkg::ObjectCanSendNextCamPos object_can_send_srv;
-			if (processer.can_send_next_pos.call(object_can_send_srv)) {
-				ROS_INFO("OK!");
+			if (!processer.get_best_positions) {
+				processer.DisplayResults();
+				gazebo_pkg::ObjectCanSendNextCamPos object_can_send_srv;
+				if (processer.can_send_next_pos.call(object_can_send_srv)) {
+					ROS_INFO("ObjectCanSendNextCamPos OK!");
+				} else {
+					ROS_ERROR("ObjectCanSendNextCamPos NOT OK!");
+					return 1;
+				}
 			} else {
-				ROS_ERROR("Not OK!");
-				return 1;
+				processer.FindMaxElements(3);
+				processer.SaveCloudPCDs();
 			}
-
-			processer.DisplayResults();
 
 			processer.can_process = false;
 		}
+
+//		if ()
 
 	}
 	return 0;

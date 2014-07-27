@@ -31,6 +31,8 @@ MoveCamera::MoveCamera() {
 
 	this->delay = 0;
 
+	this->last_pose = false;
+
 //	this->initialQuaternion.setW();
 //	this->initialQuaternion.setX();
 //	this->initialQuaternion.setY();
@@ -141,6 +143,12 @@ void MoveCamera::SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &message) {
 bool MoveCamera::GetCameraPosition(
 		gazebo_pkg::ObjectInspectionCameraPos::Request &req,
 		gazebo_pkg::ObjectInspectionCameraPos::Response &res) {
+
+	if (req.last) {
+		this->last_pose = true;
+	} else {
+		this->last_pose = false;
+	}
 
 	this->look_at_pos_x = req.cameraPos.elems[0];
 	this->look_at_pos_y = req.cameraPos.elems[1];
@@ -517,6 +525,9 @@ void MoveCamera::OnUpdate() {
 //		this->SubtractQuaternionAngles();
 
 //		this->PrintTransformPose(); // doar print ramane comentat
+
+	gazebo_pkg::ObjectInspectionCloud get_cloud_srv;
+
 	if (this->orientation_ready) {
 
 		// ############# QUATERNION TEST ###############
@@ -569,8 +580,16 @@ void MoveCamera::OnUpdate() {
 		this->delay++;
 	}
 
-	if (this->get_cloud_ready && this->delay > 2000) {
-		gazebo_pkg::ObjectInspectionCloud get_cloud_srv;
+	if (this->last_pose) {
+		get_cloud_srv.request.can_get_best_positions = true;
+	}
+	else
+	{
+		get_cloud_srv.request.can_get_best_positions = false;
+	}
+
+	if (this->get_cloud_ready && this->delay > 3000) {
+//		gazebo_pkg::ObjectInspectionCloud get_cloud_srv;
 		if (this->get_cloud_client.call(get_cloud_srv)) {
 			ROS_INFO("Got Cloud!");
 		} else {
@@ -580,11 +599,6 @@ void MoveCamera::OnUpdate() {
 		this->delay = 0;
 
 	}
-//		this->PrintCameraPose(); // doar print ramane comentat
-
-//		this->newPos.pos.x = this->newPos.pos.z + 0.01;
-//		this->model->SetWorldPose(this->newPos);
-//	}
 
 }
 

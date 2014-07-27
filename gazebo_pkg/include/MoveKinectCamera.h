@@ -103,6 +103,7 @@ private:
 
 	bool orientation_ready;
 	bool get_cloud_ready;
+	bool last_pose;
 
 	math::Pose newPos;
 	math::Pose probaPos;

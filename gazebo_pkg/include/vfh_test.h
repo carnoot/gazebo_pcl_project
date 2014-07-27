@@ -38,6 +38,8 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/vfh.h>
 
+#include <pcl/surface/mls.h>
+
 #include <gazebo/math/Quaternion.hh>
 #include <gazebo.hh>
 #include "gazebo/physics/physics.hh"
@@ -69,6 +71,14 @@ public:
 	void DisplayPoints(pcl::PointCloud<PointType> &);
 	void DisplayResults();
 	void ProcessResults();
+
+	void CreateSingleSVMFile(std::string &, std::string &, std::string &,
+			std::string &);
+
+	void ClassifierDataFromPCLVector(std::vector<pcl::PointCloud<PointType>> &);
+
+	void CreateVFHDirectories(boost::filesystem::path &,
+			boost::filesystem::path &);
 
 	int TraversePCDDirectory(const boost::filesystem::path &);
 
@@ -114,6 +124,9 @@ public:
 
 	void LoadSCVFile(std::string &);
 
+	pcl::PointCloud<pcl::PointNormal> SmoothCloud(
+			pcl::PointCloud<PointType>::Ptr);
+
 	pcl::PointCloud<pcl::Normal>::Ptr normalEstimation(
 			const pcl::PointCloud<PointType>::ConstPtr);
 
@@ -152,6 +165,11 @@ public:
 	std::string libSVM_results_file_name;
 	std::string libSVM_svm_predict_exe_name;
 	std::string libSVM_svm_train_exe_name;
+
+	std::string single_cloud_path;
+	std::string single_vfh_path;
+	std::string single_CSV_path;
+	std::string single_SVM_path;
 
 	ros::ServiceServer service;
 	ros::ServiceServer service_1;

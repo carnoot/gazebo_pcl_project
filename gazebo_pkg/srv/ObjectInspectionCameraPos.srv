@@ -1,4 +1,5 @@
 float32[3] cameraPos
 int32 objectNum
+bool last
 ---
 bool success

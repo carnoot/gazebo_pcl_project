@@ -1,3 +1,4 @@
 sensor_msgs/PointCloud2 kinect_cloud
+bool can_get_best_positions
 ---
 bool success

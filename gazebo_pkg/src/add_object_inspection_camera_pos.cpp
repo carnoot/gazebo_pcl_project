@@ -28,11 +28,11 @@ void InitParameters() {
 	cam_y = 0;
 	cam_z = 0;
 
-	radius = 0.5;
+	radius = 1;
 	teta = 0; //moves
 	phi = 1.0; //fix
 
-	rotation_step_size = 0.1;
+	rotation_step_size = 1;
 	can_send_next_cam_pos = true;
 
 }
@@ -103,23 +103,31 @@ int main(int argc, char **argv) {
 
 				std::cerr << cam_x << " " << cam_y << " " << cam_z << std::endl;
 
+				if (teta > 6.28){
+					camera_pos_srv.request.last = true;
+				}
+				else
+				{
+					camera_pos_srv.request.last = false;
+				}
+
 				camera_pos_srv.request.cameraPos.elems[0] = cam_x;
 				camera_pos_srv.request.cameraPos.elems[1] = cam_y;
 				camera_pos_srv.request.cameraPos.elems[2] = cam_z;
 
 				if (camera_pos_client.call(camera_pos_srv)) {
-					ROS_INFO("OK!");
+					ROS_INFO("camera_pos_srv OK!");
 				} else {
-					ROS_ERROR("Not OK!");
+					ROS_ERROR("camera_pos_srv Not OK!");
 					return 1;
 				}
 
-				sleep(2);
+				sleep(3);
 
 				if (object_number_client.call(object_number_srv)) {
-					ROS_INFO("OK!");
+					ROS_INFO("object_number_client OK!");
 				} else {
-					ROS_ERROR("Not OK!");
+					ROS_ERROR("object_number_client Not OK!");
 					return 1;
 				}
 

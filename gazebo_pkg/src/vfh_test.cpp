@@ -17,6 +17,11 @@ VFHTest::VFHTest() {
 	this->libSVM_svm_predict_exe_name = "/home/furdek/svm-predict";
 	this->libSVM_results_file_name = "/home/furdek/libSVM_result.txt";
 
+	this->single_cloud_path = "/home/furdek/kinect_sim_final.pcd";
+	this->single_vfh_path = "/home/furdek/single_vfh.pcd";
+	this->single_CSV_path = "/home/furdek/singleSCV.txt";
+	this->single_SVM_path = "/home/furdek/singleSVM.txt";
+
 	this->svm_identifier = "test";
 	this->svm_type_classifier = "ml_classifiers/NearestNeighborClassifier"; //SVMClassifier NearestNeighborClassifier
 
@@ -42,11 +47,120 @@ VFHTest::~VFHTest() {
 
 }
 
+pcl::PointCloud<pcl::PointNormal> VFHTest::SmoothCloud(
+		pcl::PointCloud<PointType>::Ptr cloud) {
+
+	pcl::search::KdTree<PointType>::Ptr tree(
+			new pcl::search::KdTree<PointType>);
+
+	pcl::PointCloud<pcl::PointNormal> mls_points;
+
+	pcl::MovingLeastSquares<PointType, pcl::PointNormal> mls;
+
+	mls.setComputeNormals(true);
+
+	// Set parameters
+	mls.setInputCloud(cloud);
+	mls.setPolynomialFit(true);
+	mls.setSearchMethod(tree);
+	mls.setSearchRadius(0.03);
+
+	mls.process(mls_points);
+
+	return mls_points;
+
+}
+
+void VFHTest::CreateSingleSVMFile(std::string &cloud_path,
+		std::string &vfh_path, std::string &scv_path, std::string &singleSVM) {
+
+	vfh_model model;
+	pcl::PointCloud<PointType> cl;
+
+	this->model_label_values.clear();
+	this->models.clear();
+
+	pcl::io::loadPCDFile(cloud_path, cl);
+	this->SaveVFHS(vfh_path, this->ComputeVFH(cl));
+	this->loadHist(boost::filesystem::path(vfh_path), model);
+	this->model_label_values.resize(1);
+	this->model_label_values[0] = 2;
+	this->models.resize(1);
+	this->models[0] = model;
+	this->CreateSCVFile(scv_path);
+	this->CreateFileForLibSVM(scv_path, singleSVM);
+
+}
+
+void VFHTest::ClassifierDataFromPCLVector(
+		std::vector<pcl::PointCloud<PointType>> &cloud_vector) {
+
+	float vfh_max_value = -10000.00;
+	int vfh_idx = 0;
+	vfh_model vfh;
+
+	this->models.reserve(cloud_vector.size());
+
+	for (int i = 0; i < cloud_vector.size(); i++) {
+		pcl::PointCloud<pcl::VFHSignature308>::Ptr point(
+				new pcl::PointCloud<pcl::VFHSignature308>());
+		std::vector<pcl::PCLPointField> fields;
+		point = this->ComputeVFH(cloud_vector[i]);
+		pcl::getFieldIndex(*point, "vfh", fields);
+		vfh.second.resize(308);
+		vfh_max_value = -10000.00;
+
+		for (size_t k = 0; k < fields[vfh_idx].count; k++) {
+			if (point->points[0].histogram[k] > vfh_max_value)
+				vfh_max_value = point->points[0].histogram[k];
+		}
+
+		for (size_t i = 0; i < fields[vfh_idx].count; ++i) {
+			vfh.second[i] = point->points[0].histogram[i] / vfh_max_value;
+		}
+
+		this->models.push_back(vfh);
+
+	}
+
+}
+
+void VFHTest::CreateVFHDirectories(
+		boost::filesystem::path &main_training_path_to_read_VFH_from,
+		boost::filesystem::path &main_testing_path_to_read_VFH_from) {
+	if (!boost::filesystem::exists(main_training_path_to_read_VFH_from)) {
+
+		std::cerr << main_training_path_to_read_VFH_from
+				<< "JUST Created Training Directory" << std::endl;
+		boost::filesystem::create_directory(
+				main_training_path_to_read_VFH_from);
+	} else {
+		std::cerr << main_training_path_to_read_VFH_from
+				<< "ALREADY Created Training Directory" << std::endl;
+		boost::filesystem::create_directory(
+				main_training_path_to_read_VFH_from);
+	}
+
+	if (!boost::filesystem::exists(main_testing_path_to_read_VFH_from)) {
+
+		std::cerr << main_testing_path_to_read_VFH_from
+				<< "JUST Created Testing Directory" << std::endl;
+		boost::filesystem::create_directory(main_testing_path_to_read_VFH_from);
+	} else {
+		std::cerr << main_testing_path_to_read_VFH_from
+				<< "ALREADY Created Testing Directory" << std::endl;
+		boost::filesystem::create_directory(main_testing_path_to_read_VFH_from);
+	}
+}
+
 void VFHTest::GenerateLibSVMCommand(std::string &executable_path,
 		std::string &training_input_path, std::string &output_path) {
 
 	std::string command_string;
 	command_string.append(executable_path);
+
+	command_string.append(" -s 0 -t 2");
+
 	command_string.append(" \\");
 	command_string.append(training_input_path);
 	command_string.append(" \\");
@@ -394,6 +508,7 @@ bool VFHTest::loadHist(const boost::filesystem::path &path, vfh_model &vfh) {
 				idx);
 
 		vfh_idx = pcl::getFieldIndex(cloud, "vfh");
+		std::cerr << "vfh_index: " << vfh_idx << std::endl;
 		if (vfh_idx == -1)
 			return (false);
 		if ((int) cloud.width * cloud.height != 1)
@@ -525,14 +640,27 @@ pcl::PointCloud<pcl::VFHSignature308>::Ptr VFHTest::ComputeVFH(
 		pcl::PointCloud<PointType> cl) {
 
 	pcl::PointCloud<PointType>::Ptr cloud(new pcl::PointCloud<PointType>(cl));
-	pcl::PointCloud<pcl::Normal>::Ptr normals(
-			new pcl::PointCloud<pcl::Normal>());
 
 	pcl::VFHEstimation<PointType, pcl::Normal, pcl::VFHSignature308> vfh;
 	vfh.setInputCloud(cloud);
 	std::cerr << "Estimating Normals" << std::endl;
-	normals = this->normalEstimation(cloud);
-	vfh.setInputNormals(normals);
+
+//	normals = this->normalEstimation(cloud);
+
+	pcl::PointCloud<pcl::PointNormal> smoothed_normals;
+	smoothed_normals = this->SmoothCloud(cloud);
+
+//	pcl::PointCloud<pcl::PointNormal>::Ptr normals(
+//			new pcl::PointCloud<pcl::PointNormal>(smoothed_normals));
+
+	pcl::PointCloud<pcl::Normal> simple_normals;
+
+	pcl::copyPointCloud(smoothed_normals, simple_normals);
+
+	pcl::PointCloud<pcl::Normal>::Ptr final_normals(
+			new pcl::PointCloud<pcl::Normal>(simple_normals));
+
+	vfh.setInputNormals(final_normals);
 
 	pcl::search::KdTree<PointType>::Ptr tree(
 			new pcl::search::KdTree<PointType>());
@@ -742,15 +870,6 @@ void VFHTest::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 	}
 }
 
-void VFHTest::SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &message) {
-
-//	std::cout << "In SaveClouds Callback!" << std::endl;
-//    this->mut.lock();
-	pcl::fromROSMsg(*message, this->cloud);
-//    this->mut.unlock();
-
-}
-
 void VFHTest::DisplayResults() {
 	for (int i = 0; i < this->result_vect.size(); i++) {
 		std::cerr << this->result_vect[i] << " ";
@@ -766,6 +885,10 @@ void VFHTest::ProcessResults() {
 				<< " most: " << this->result_labels[i] << std::endl;
 	}
 }
+
+//void VFHTest::WorkFlow(){
+//
+//}
 
 int main(int argc, char **argv) {
 
@@ -794,56 +917,9 @@ int main(int argc, char **argv) {
 	ros::AsyncSpinner *spinner = new ros::AsyncSpinner(1);
 	spinner->start();
 
-	if (!boost::filesystem::exists(main_training_path_to_read_VFH_from)) {
-
-//		std::cerr << main_training_path_to_read_VFH_from << "Deleted"
-//				<< std::endl;
-//		boost::filesystem::remove_all(main_training_path_to_read_VFH_from);
-
-		std::cerr << main_training_path_to_read_VFH_from << "JUST Created"
-				<< std::endl;
-		boost::filesystem::create_directory(
-				main_training_path_to_read_VFH_from);
-	} else {
-		std::cerr << main_training_path_to_read_VFH_from << "ALREADY Created"
-				<< std::endl;
-		boost::filesystem::create_directory(
-				main_training_path_to_read_VFH_from);
-	}
-
-	if (!boost::filesystem::exists(main_testing_path_to_read_VFH_from)) {
-
-//		std::cerr << main_testing_path_to_read_VFH_from << "Deleted"
-//				<< std::endl;
-//		boost::filesystem::remove_all(main_testing_path_to_read_VFH_from);
-
-		std::cerr << main_testing_path_to_read_VFH_from << "JUST Created"
-				<< std::endl;
-		boost::filesystem::create_directory(main_testing_path_to_read_VFH_from);
-	} else {
-		std::cerr << main_testing_path_to_read_VFH_from << "ALREADY Created"
-				<< std::endl;
-		boost::filesystem::create_directory(main_testing_path_to_read_VFH_from);
-	}
-
-//	processer->CreateFileForLibSVM(processer->csv_training_file_name, processer->libSVM_training_file_name);
-//	processer->CreateFileForLibSVM(processer->csv_testing_file_name, processer->libSVM_testing_file_name);
-
-	processer->GenerateLibSVMCommand(processer->libSVM_svm_train_exe_name,
-			processer->libSVM_training_file_name,
-			processer->libSVM_model_file_name);
-
-	processer->GenerateLibSVMCommand(processer->libSVM_svm_predict_exe_name,
-			processer->libSVM_testing_file_name,
-			processer->libSVM_model_file_name,
-			processer->libSVM_results_file_name);
-
-//	processer->primary_folder_path =
-//			main_training_path_to_read_VFH_from.string();
-//	processer->TraversePCDDirectory(main_training_path_to_read_PCD_from);
-//	processer->TraverseVFHDirectory(main_training_path_to_read_VFH_from);
-//	std::cerr << "Models found: " << processer->models.size() << std::endl;
-//	processer->CreateSCVFile(processer->csv_training_file_name);
+//	processer->GenerateLibSVMCommand(processer->libSVM_svm_train_exe_name,
+//			processer->libSVM_training_file_name,
+//			processer->libSVM_model_file_name);
 
 //	processer->LoadSCVFile(processer->csv_training_file_name);
 //
@@ -852,6 +928,35 @@ int main(int argc, char **argv) {
 //	processer->AddSVMClassData();
 //
 //	processer->TrainSVMData();
+//
+//	processer->CreateSingleSVMFile(processer->single_cloud_path,
+//			processer->single_vfh_path, processer->single_CSV_path,
+//			processer->single_SVM_path);
+//
+//	processer->LoadSCVFile(processer->single_CSV_path);
+//
+//	std::cerr << "BLA BLAURI!" << std::endl;
+//
+//	processer->ClassifySVMData();
+
+//	processer->CreateVFHDirectories(main_training_path_to_read_VFH_from,
+//			main_testing_path_to_read_VFH_from);
+
+//	processer->CreateFileForLibSVM(processer->csv_training_file_name, processer->libSVM_training_file_name);
+//	processer->CreateFileForLibSVM(processer->csv_testing_file_name, processer->libSVM_testing_file_name);
+
+//
+//	processer->GenerateLibSVMCommand(processer->libSVM_svm_predict_exe_name,
+//			processer->libSVM_testing_file_name,
+//			processer->libSVM_model_file_name,
+//			processer->libSVM_results_file_name);
+
+//	processer->primary_folder_path =
+//			main_training_path_to_read_VFH_from.string();
+//	processer->TraversePCDDirectory(main_training_path_to_read_PCD_from);
+//	processer->TraverseVFHDirectory(main_training_path_to_read_VFH_from);
+//	std::cerr << "Models found: " << processer->models.size() << std::endl;
+//	processer->CreateSCVFile(processer->csv_training_file_name);
 
 //	processer->primary_folder_path =
 //			main_testing_path_to_read_VFH_from.string();
@@ -865,10 +970,13 @@ int main(int argc, char **argv) {
 //			"/home/furdek/VFH_training_VFH_data_test/1_SPHERE/obj000_bowl1/bowl1_0000-ascii-smooth.pcd",
 //			mod);
 
+//	pcl::io::loadPCDFile("/home/furdek/kinect_sim_final.pcd", *initial_cloud);
+//	processer->SmoothCloud(initial_cloud);
+
 //	processer->LoadSCVFile(processer->csv_testing_file_name);
 //	processer->ClassifySeparateSVMData();
 
-//	processer->ClassifySVMData();
+	processer->ClassifySVMData();
 //	processer->ProcessResults();
 
 	delete processer;

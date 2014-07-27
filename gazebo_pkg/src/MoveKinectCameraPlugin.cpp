@@ -432,6 +432,9 @@ void MoveKinectCameraPlugin::OnUpdate() {
 							this->lookAt_z), Ogre::Node::TS_WORLD,
 					Ogre::Vector3::UNIT_X);
 
+			std::cerr << "Showing BoundingBox" << std::endl;
+			gui::get_active_camera()->GetScene()->GetVisual("4::link::visual4")->ShowBoundingBox();
+
 			this->msgToSend.set_pos_x(
 					this->cameraVisual->GetSceneNode()->getPosition().x);
 			this->msgToSend.set_pos_y(

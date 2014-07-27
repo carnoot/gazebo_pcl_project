@@ -42,10 +42,27 @@ bool RosGetCoord::PassObjectCenter(
 		gazebo_pkg::ObjectInspectionStart::Response &res) {
 
 	int nr = req.number;
+	int name_nr = 0;
+
+	for (int i = 0; i < this->parent->GetModelCount(); i++) {
+		boost::shared_ptr<gazebo::physics::Model> model_ptr =
+				this->parent->GetModel(i);
+
+		name_nr =
+				atoi(
+						model_ptr->GetSDF()->GetAttribute("name")->GetAsString().c_str());
+		if (nr == name_nr) {
+			std::cerr << "Name of model: "
+					<< model_ptr->GetSDF()->GetAttribute("name")->GetAsString()
+					<< std::endl;
+			nr = i;
+			break;
+		}
+
+	}
 
 	boost::shared_ptr<gazebo::physics::Model> model_ptr =
 			this->parent->GetModel(nr);
-	physics::ModelPtr my_model = this->parent->GetModel(nr);
 
 	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
 			model_ptr->GetBoundingBox().max);
@@ -81,9 +98,28 @@ bool RosGetCoord::ObjectToInspect(
 		gazebo_pkg::ObjectInspectionNumber::Response &res) {
 
 	int nr = req.number;
+	int name_nr = 0;
+
+	for (int i = 0; i < this->parent->GetModelCount(); i++) {
+		boost::shared_ptr<gazebo::physics::Model> model_ptr =
+				this->parent->GetModel(i);
+
+		name_nr =
+				atoi(
+						model_ptr->GetSDF()->GetAttribute("name")->GetAsString().c_str());
+		if (nr == name_nr) {
+			std::cerr << "Name of model: "
+					<< model_ptr->GetSDF()->GetAttribute("name")->GetAsString()
+					<< std::endl;
+			nr = i;
+			break;
+		}
+
+	}
 
 	boost::shared_ptr<gazebo::physics::Model> model_ptr =
 			this->parent->GetModel(nr);
+
 	physics::ModelPtr my_model = this->parent->GetModel(nr);
 
 	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
@@ -208,11 +244,15 @@ bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 	std::vector<gazebo_pkg::Object> vect;
 	gazebo_pkg::Object currentObject;
 
+	this->pair_values.clear();
+	this->pair_values.reserve(req.msg.size());
+
 	vect = req.msg;
 
 	for (std::vector<gazebo_pkg::Object>::iterator it = vect.begin();
 			it != vect.end(); ++it) {
-
+		this->pair_values.push_back(
+				std::make_pair((int) it->ID, std::to_string(it->CLASSIFIER)));
 		currentObject = *it;
 		this->CreateShape(currentObject);
 
@@ -290,7 +330,7 @@ std::string RosGetCoord::CreateOrientationString(gazebo_pkg::Object obj) {
 	std::string localString;
 	std::ostringstream converter;
 
-	std::vector<float> euler_angles = RosGetCoord::QuaternionToEuler(
+	std::vector<float> euler_angles = this->QuaternionToEuler(
 			obj.pose.orientation.w, obj.pose.orientation.x,
 			obj.pose.orientation.y, obj.pose.orientation.z);
 
@@ -322,7 +362,9 @@ std::string RosGetCoord::CreateModelNameString(gazebo_pkg::Object obj) {
 	std::ostringstream converter;
 
 	localString.append("'");
-	localString.append(obj.SHAPE);
+
+//	if (!obj.MESH)
+//		localString.append(obj.SHAPE);
 
 	converter << obj.ID;
 
@@ -451,6 +493,20 @@ std::string RosGetCoord::CreateMesh(gazebo_pkg::Object obj) {
 
 }
 
+std::string RosGetCoord::AddStaticAttribute(bool _static) {
+	std::string localString;
+
+	localString.append("<static>");
+	if (_static) {
+		localString.append("1");
+	} else {
+		localString.append("0");
+	}
+	localString.append("</static>\n");
+
+	return localString;
+}
+
 void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 
 	sdf::SDF shapeSDF;
@@ -458,9 +514,12 @@ void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 	std::string TextSdf;
 
 	TextSdf.append("<sdf version ='1.4'>\n<model name =");
-	TextSdf.append(RosGetCoord::CreateModelNameString(obj));
-	TextSdf.append(RosGetCoord::CreatePositionString(obj));
-	TextSdf.append(RosGetCoord::CreateOrientationString(obj));
+	TextSdf.append(this->CreateModelNameString(obj));
+	TextSdf.append(this->CreatePositionString(obj));
+	TextSdf.append(this->CreateOrientationString(obj));
+
+	if (obj.MESH)
+		TextSdf.append(this->AddStaticAttribute(true));
 
 	TextSdf.append(
 			"<link name ='link'>\n<collision name ='collision'>\n<geometry>");
@@ -468,23 +527,26 @@ void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 	if (obj.MESH) {
 
 		TextSdf.append(this->CreateMesh(obj));
-		TextSdf.append(
-				"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
+		TextSdf.append("</geometry>\n</collision>\n<visual name ='visual");
+		TextSdf.append(std::to_string(obj.ID));
+		TextSdf.append("'>\n<geometry>");
+//		TextSdf.append(
+//				"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
 		TextSdf.append(this->CreateMesh(obj));
 
 	} else {
 
-		TextSdf.append(RosGetCoord::CreateGeometry(obj));
+		TextSdf.append(this->CreateGeometry(obj));
 
 		TextSdf.append(
 				"</geometry>\n</collision>\n<visual name ='visual'>\n<geometry>");
 
-		TextSdf.append(RosGetCoord::CreateGeometry(obj));
+		TextSdf.append(this->CreateGeometry(obj));
 
 	}
 
 	TextSdf.append("</geometry>\n");
-	TextSdf.append(RosGetCoord::CreateMaterialColor(obj));
+	TextSdf.append(this->CreateMaterialColor(obj));
 
 	TextSdf.append("</visual>\n</link>\n</model>\n</sdf>");
 

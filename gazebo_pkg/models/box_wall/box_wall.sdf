@@ -3,7 +3,7 @@
     <model name="box_wall">
     
       <pose>-2.5 -6 1.45 0 0 0</pose>
-      <static>true</static>
+      <static>1</static>
       
       <link name="link">
         <collision name="collision">

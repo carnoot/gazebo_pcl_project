@@ -52,6 +52,8 @@ add_service_files(
 	ObjectInspectionQuaternion.srv
 	ObjectCanSendNextCamPos.srv
 	ObjectInspectionStart.srv
+	ObjectInspectionClassifier.srv
+	Classifier.srv
 )
 
 generate_messages(   
