@@ -22,8 +22,17 @@ VFHTest::VFHTest() {
 	this->single_CSV_path = "/home/furdek/singleSCV.txt";
 	this->single_SVM_path = "/home/furdek/singleSVM.txt";
 
+	this->can_classify = false;
+	this->classifier_ready = false;
+
 	this->svm_identifier = "test";
 	this->svm_type_classifier = "ml_classifiers/NearestNeighborClassifier"; //SVMClassifier NearestNeighborClassifier
+
+	this->get_classifier = n.advertiseService("get_classifier",
+			&VFHTest::GetClassifier, this);
+
+	this->get_clouds_to_classify = n.advertiseService("get_clouds_to_classify",
+			&VFHTest::GetCloudsToClassify, this);
 
 	this->create_svm_classifier = n.serviceClient<
 			ml_classifiers::CreateClassifier>(
@@ -47,6 +56,34 @@ VFHTest::~VFHTest() {
 
 }
 
+bool VFHTest::GetCloudsToClassify(
+		gazebo_pkg::ObjectInspectionClassifyClouds::Request &req,
+		gazebo_pkg::ObjectInspectionClassifyClouds::Response &res) {
+
+	this->clouds_to_classify_vect.reserve(req.clouds_to_classify.size());
+
+	for (size_t i = 0; i < req.clouds_to_classify.size(); i++) {
+		pcl::PointCloud<PointType> cloud;
+		pcl::fromROSMsg(req.clouds_to_classify[i], cloud);
+		this->clouds_to_classify_vect.push_back(cloud);
+	}
+
+	std::cerr << "clouds_to_classify_vect size: "
+			<< this->clouds_to_classify_vect.size() << std::endl;
+	this->can_classify = true;
+}
+
+bool VFHTest::GetClassifier(
+		gazebo_pkg::ObjectInspectionClassifier::Request &req,
+		gazebo_pkg::ObjectInspectionClassifier::Response &res) {
+
+	this->classifier = req.classifier;
+	this->classifier_ready = true;
+	std::cerr << "Classifier received: " << this->classifier << std::endl;
+	return (true);
+
+}
+
 pcl::PointCloud<pcl::PointNormal> VFHTest::SmoothCloud(
 		pcl::PointCloud<PointType>::Ptr cloud) {
 
@@ -59,7 +96,7 @@ pcl::PointCloud<pcl::PointNormal> VFHTest::SmoothCloud(
 
 	mls.setComputeNormals(true);
 
-	// Set parameters
+// Set parameters
 	mls.setInputCloud(cloud);
 	mls.setPolynomialFit(true);
 	mls.setSearchMethod(tree);
@@ -122,6 +159,32 @@ void VFHTest::ClassifierDataFromPCLVector(
 		this->models.push_back(vfh);
 
 	}
+
+	std::cerr << "Models ready!" << std::endl;
+	std::cerr << "Models' size: " << this->models.size() << std::endl;
+
+	this->data_points.clear();
+	this->data.clear();
+
+	this->data_points.resize(this->models.size());
+	std::cerr << "data_points' size: " << this->data_points.size() << std::endl;
+	for (size_t j = 0; j < this->models.size(); j++) {
+		this->data_points[j].resize(308);
+		for (size_t m = 0; m < this->models[j].second.size(); m++) {
+			this->data_points[j][m] = this->models[j].second[m];
+		}
+	}
+
+	std::cerr << "data_points ready: " << this->data_points.size() << std::endl;
+
+	this->data.resize(cloud_vector.size());
+
+	for (size_t n = 0; n < cloud_vector.size(); n++) {
+		this->data[n].target_class = this->classifier;
+		this->data[n].point = this->data_points[n];
+	}
+
+	std::cerr << "data size: " << this->data.size() << std::endl;
 
 }
 
@@ -414,17 +477,6 @@ int VFHTest::ClassifySVMData() {
 	}
 	std::cerr << std::endl;
 
-//	std::cerr << my_data_to_be_classified.request.data[708].point[0]
-//			<< " + Label: "
-//			<< my_data_to_be_classified.request.data[708].target_class
-//			<< std::endl;
-
-//	std::cerr << my_data_to_be_classified.request.data.size() << std::endl;
-//	for (int a = 0; a < my_data_to_be_classified.request.data.size(); a++) {
-//		std::cerr << my_data_to_be_classified.request.data[a].point.size()
-//				<< std::endl;
-//	}
-
 	if (this->classify_svm_data.call(my_data_to_be_classified)) {
 		std::cerr << "Classifying SUCCESSFULL!" << std::endl;
 		this->result_labels.resize(
@@ -576,14 +628,6 @@ void VFHTest::LoadSCVFile(std::string &filename) {
 	std::ifstream in(filename);
 	std::string line;
 	std::vector<std::string> separated_line;
-
-//	this->data_points.resize(this->models.size() - 1);
-//	this->data_points_labels.resize(this->models.size() - 1);
-//	this->data.resize(this->models.size() - 1);
-
-//	for (int a = 0; a < this->data_points.size(); a++){
-//	this->data_points[a].resize(this->models[1].second.size());
-//	}
 
 	while (std::getline(in, line) > 0) {
 
@@ -886,6 +930,14 @@ void VFHTest::ProcessResults() {
 	}
 }
 
+void VFHTest::LoadAndTrainSVMData() {
+
+	this->LoadSCVFile(this->csv_training_file_name);
+	this->CreateSVMClassifier();
+	this->AddSVMClassData();
+	this->TrainSVMData();
+}
+
 //void VFHTest::WorkFlow(){
 //
 //}
@@ -917,17 +969,29 @@ int main(int argc, char **argv) {
 	ros::AsyncSpinner *spinner = new ros::AsyncSpinner(1);
 	spinner->start();
 
+	std::cerr << "VFHTest Spinning!" << std::endl;
+
+	while (ros::ok()) {
+
+		if (processer->classifier_ready && processer->can_classify) {
+
+			processer->LoadAndTrainSVMData();
+
+			processer->ClassifierDataFromPCLVector(
+					processer->clouds_to_classify_vect);
+
+			processer->ClassifySVMData();
+
+			processer->classifier_ready = false;
+			processer->can_classify = false;
+		}
+
+	}
+
 //	processer->GenerateLibSVMCommand(processer->libSVM_svm_train_exe_name,
 //			processer->libSVM_training_file_name,
 //			processer->libSVM_model_file_name);
 
-//	processer->LoadSCVFile(processer->csv_training_file_name);
-//
-//	processer->CreateSVMClassifier();
-//
-//	processer->AddSVMClassData();
-//
-//	processer->TrainSVMData();
 //
 //	processer->CreateSingleSVMFile(processer->single_cloud_path,
 //			processer->single_vfh_path, processer->single_CSV_path,
@@ -937,7 +1001,6 @@ int main(int argc, char **argv) {
 //
 //	std::cerr << "BLA BLAURI!" << std::endl;
 //
-//	processer->ClassifySVMData();
 
 //	processer->CreateVFHDirectories(main_training_path_to_read_VFH_from,
 //			main_testing_path_to_read_VFH_from);
@@ -976,14 +1039,14 @@ int main(int argc, char **argv) {
 //	processer->LoadSCVFile(processer->csv_testing_file_name);
 //	processer->ClassifySeparateSVMData();
 
-	processer->ClassifySVMData();
+//	processer->ClassifySVMData();
 //	processer->ProcessResults();
 
-	delete processer;
+//	delete processer;
 
 //	pcl::PCDReader reader;
 //	reader.read(pcd_path, *initial_cloud);
 //	processer.ComputeVFH(*initial_cloud);
 
-	return 0;
+//	return 0;
 }

@@ -12,6 +12,7 @@
 #include "gazebo_pkg/ObjectInspectionCenter.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionCameraPos.h"
+#include "gazebo_pkg/ObjectInspectionClassifier.h"
 #include "gazebo_pkg/ObjectInspectionStart.h"
 #include <cstdlib>
 #include <sstream>
@@ -67,6 +68,7 @@ public:
 	ros::ServiceServer service_1;
 	ros::ServiceServer service_2;
 	ros::ServiceServer service_3;
+	ros::ServiceClient send_classifier;
 	event::ConnectionPtr updateConnection;
 
 	std::pair<int, std::string> object_pair;

@@ -8,6 +8,7 @@
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionQuaternion.h"
 #include "gazebo_pkg/ObjectInspectionClassifier.h"
+#include "gazebo_pkg/ObjectInspectionClassifyClouds.h"
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
 #include "pcl_conversions/pcl_conversions.h"
 #include "pcl/pcl_base.h"
@@ -44,15 +45,14 @@ public:
 			gazebo_pkg::ObjectInspectionQuaternion::Request &,
 			gazebo_pkg::ObjectInspectionQuaternion::Response &);
 	void SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &);
+	void SendCloudsToBeClassifed();
 	bool GetObjectBounding(
 			gazebo_pkg::ObjectInspectionBounding::Request &,
 			gazebo_pkg::ObjectInspectionBounding::Response &);
-	bool GetClassifier(
-			gazebo_pkg::ObjectInspectionClassifier::Request &req,
-			gazebo_pkg::ObjectInspectionClassifier::Response &res);
 	int PointsInBoundingBoxManual(pcl::PointCloud<PointType>);
 	int PointsInBoundingBoxPcl(pcl::PointCloud<PointType>);
 	void FindMaxElements(int);
+	void CreateFinalCloudVector();
 	void PlaneSegmentationExtraction(const pcl::PointCloud<PointType>::Ptr);
 	void DisplayPoints(pcl::PointCloud<PointType> &);
 	void DisplayResults();
@@ -66,6 +66,7 @@ public:
 	std::vector<pcl::PointCloud<PointType>> clouds_to_process_vect;
 	int clouds_processed;
 	int contor;
+	int first_max_elements;
 	std::string my_classifier;
 	float bounding_min[3];
 	float bounding_max[3];
@@ -79,6 +80,7 @@ public:
 	ros::ServiceServer get_cam_quaternion;
 	ros::ServiceServer get_classifier;
 	ros::ServiceClient can_send_next_pos;
+	ros::ServiceClient send_clouds_to_classify;
 	ros::Subscriber sub;
 	pcl::PointCloud<PointType> cloud;
 	pcl::PointCloud<PointType> cloud_to_process;

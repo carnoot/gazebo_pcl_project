@@ -198,12 +198,6 @@ void MoveCamera::SetNewOrientation(
 		const boost::shared_ptr<
 				const custom_pose_message::msgs::CustomPoseRequest>& orientation_msg) {
 
-	// ############### POSITION WON't CHANGE, BUT NEED TO BE INITIALIZED TO SEND #################
-//	this->look_at_pos_x = orientation_msg->pos_x();
-//	this->look_at_pos_y = orientation_msg->pos_y();
-//	this->look_at_pos_z = orientation_msg->pos_z();
-	// ############### POSITION WON't CHANGE, BUT NEED TO BE INITIALIZED TO SEND #################
-
 	this->look_at_w = orientation_msg->rot_w();
 	this->look_at_x = orientation_msg->rot_x();
 	this->look_at_y = orientation_msg->rot_y();
@@ -212,11 +206,6 @@ void MoveCamera::SetNewOrientation(
 	std::cout << "New ORIENTATION SET" << std::endl;
 
 	this->orientation_ready = true;
-
-//	std::cout << "RECEIVED W = " << orientation_msg->rot_w() << std::endl;
-//	std::cout << "RECEIVED X = " << orientation_msg->rot_x() << std::endl;
-//	std::cout << "RECEIVED Y = " << orientation_msg->rot_y() << std::endl;
-//	std::cout << "RECEIVED Z = " << orientation_msg->rot_z() << std::endl;
 
 }
 
@@ -414,32 +403,12 @@ void MoveCamera::SetCameraPosition() {
 
 void MoveCamera::AdjustPositionToKitchenLink() {
 
-//	std::cout << "Orig X: " << this->transform.getOrigin().x() << "Orig Y: "
-//			<< this->transform.getOrigin().y() << "Orig Z: "
-//			<< this->transform.getOrigin().z() << std::endl;
-
-//	std::cout << "Offset:" << this->kitchen_link_x_offset << ", "
-//			<< this->kitchen_link_y_offset << ", "
-//			<< this->kitchen_link_z_offset << std::endl;
-//
-//	std::cout << "newPos BEFORE adjust:" << this->newPos.pos.x << ", "
-//			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
-
-//	this->newPos.pos.x = (-3.45 - this->transform.getOrigin().x());
-//	this->newPos.pos.y = (-4.35 - this->transform.getOrigin().y());
-
-//	this->newPos.pos.x = 1;
-//	this->newPos.pos.y = 1;
-
 	this->newPos.pos.x = (double) (this->kitchen_link_x_offset
 			- this->transform.getOrigin().x());
 	this->newPos.pos.y = (double) (this->kitchen_link_y_offset
 			- this->transform.getOrigin().y());
 	this->newPos.pos.z = (double) (this->transform.getOrigin().z()
 			+ this->kitchen_link_z_offset);
-
-//	std::cout << "newPos AFTER adjust:" << this->newPos.pos.x << ", "
-//			<< this->newPos.pos.y << ", " << this->newPos.pos.z << std::endl;
 
 }
 

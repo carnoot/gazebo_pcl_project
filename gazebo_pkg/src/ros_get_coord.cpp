@@ -22,6 +22,8 @@ RosGetCoord::RosGetCoord() {
 	this->service_3 = n.advertiseService("pass_object_center",
 			&RosGetCoord::PassObjectCenter, this);
 
+	this->send_classifier = n.serviceClient<gazebo_pkg::ObjectInspectionClassifier>("get_classifier");
+
 	this->process_offset = 10;
 
 	ROS_INFO("Waiting for coordinates!");
@@ -219,20 +221,27 @@ bool RosGetCoord::ObjectToInspect(
 			<< srv1.request.BoundingMax.elems[2] << std::endl;
 	//#################### HACK ##########################//
 
-//	std::cerr << std::endl;
-//
-//	std::cerr << "MIN: " << this->bounding_box.min.x << " "
-//			<< this->bounding_box.min.y << " " << this->bounding_box.min.z
-//			<< std::endl;
-//	std::cerr << "MAX: " << this->bounding_box.max.x << " "
-//			<< this->bounding_box.max.y << " " << this->bounding_box.max.z
-//			<< std::endl;
-
 	if (client.call(srv1)) {
 		ROS_INFO("Object BoundingValues Sent Successfully!");
 	} else {
 		ROS_ERROR("Object BoundingValues Sending Failed!");
 	}
+
+	gazebo_pkg::ObjectInspectionClassifier my_classifier_srv;
+
+	for (size_t m = 0; m < this->pair_values.size(); m++){
+		if (this->pair_values[m].first == req.number)
+			my_classifier_srv.request.classifier = this->pair_values[m].second;
+	}
+
+	if (this->send_classifier.call(my_classifier_srv)){
+		ROS_INFO("Object Classifier Sent Successfully!");
+	}
+	else
+	{
+		ROS_ERROR("Object Classifier Sending Failed!");
+	}
+
 
 	return true;
 
@@ -256,6 +265,10 @@ bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 		currentObject = *it;
 		this->CreateShape(currentObject);
 
+	}
+
+	for (int i = 0; i < this->pair_values.size(); i++){
+		std::cerr << "values: " << this->pair_values[i].first << " " << this->pair_values[i].second << std::endl;
 	}
 
 	return true;

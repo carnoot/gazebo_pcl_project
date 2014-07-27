@@ -7,6 +7,8 @@
 #include "gazebo_pkg/ObjectInspectionCloud.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionQuaternion.h"
+#include "gazebo_pkg/ObjectInspectionClassifier.h"
+#include "gazebo_pkg/ObjectInspectionClassifyClouds.h"
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
 
 #include "ml_classifiers/CreateClassifier.h"
@@ -72,6 +74,13 @@ public:
 	void DisplayResults();
 	void ProcessResults();
 
+	bool GetClassifier(gazebo_pkg::ObjectInspectionClassifier::Request &,
+			gazebo_pkg::ObjectInspectionClassifier::Response &);
+
+	bool GetCloudsToClassify(
+			gazebo_pkg::ObjectInspectionClassifyClouds::Request &,
+			gazebo_pkg::ObjectInspectionClassifyClouds::Response &);
+
 	void CreateSingleSVMFile(std::string &, std::string &, std::string &,
 			std::string &);
 
@@ -100,6 +109,8 @@ public:
 	void GenerateLibSVMCommand(std::string &, std::string &, std::string &);
 	void GenerateLibSVMCommand(std::string &, std::string &, std::string &,
 			std::string &);
+
+	void LoadAndTrainSVMData();
 
 	bool loadHist(const boost::filesystem::path &, vfh_model &);
 
@@ -143,6 +154,8 @@ public:
 	std::vector<std::vector<ml_classifiers::ClassDataPoint>> separated_data;
 	ml_classifiers::ClassDataPoint classPoint;
 
+	std::vector<pcl::PointCloud<PointType>> clouds_to_classify_vect;
+
 	int vfh_files_found;
 	int test_counter;
 	int label;
@@ -165,6 +178,7 @@ public:
 	std::string libSVM_results_file_name;
 	std::string libSVM_svm_predict_exe_name;
 	std::string libSVM_svm_train_exe_name;
+	std::string classifier;
 
 	std::string single_cloud_path;
 	std::string single_vfh_path;
@@ -173,6 +187,8 @@ public:
 
 	ros::ServiceServer service;
 	ros::ServiceServer service_1;
+	ros::ServiceServer get_classifier;
+	ros::ServiceServer get_clouds_to_classify;
 	ros::ServiceServer get_cam_quaternion;
 	ros::ServiceClient can_send_next_pos;
 	ros::ServiceClient create_svm_classifier;
@@ -197,7 +213,7 @@ public:
 
 	double quaternion_values[4];
 
-	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;
+	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool classifier_ready;bool can_classify;
 
 };
 

@@ -53,6 +53,7 @@ add_service_files(
 	ObjectCanSendNextCamPos.srv
 	ObjectInspectionStart.srv
 	ObjectInspectionClassifier.srv
+	ObjectInspectionClassifyClouds.srv
 	Classifier.srv
 )
 

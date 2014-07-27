@@ -3,6 +3,8 @@
 PclProcesser::PclProcesser(int argc, char **argv) {
 	ros::NodeHandle n;
 
+	this->first_max_elements = 3;
+
 	this->service = n.advertiseService("get_cloud", &PclProcesser::GetCloud,
 			this);
 
@@ -18,8 +20,7 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->can_send_next_pos = n.serviceClient<
 			gazebo_pkg::ObjectCanSendNextCamPos>("get_can_send_next_cam_pos");
 
-	this->get_classifier = n.advertiseService("get_classifier",
-			&PclProcesser::GetClassifier, this);
+	this->send_clouds_to_classify = n.serviceClient<gazebo_pkg::ObjectInspectionClassifyClouds>("get_clouds_to_classify");
 
 	this->can_process = false;
 	this->x_axis_ok = false;
@@ -41,12 +42,23 @@ PclProcesser::~PclProcesser() {
 
 }
 
-bool PclProcesser::GetClassifier(
-		gazebo_pkg::ObjectInspectionClassifier::Request &req,
-		gazebo_pkg::ObjectInspectionClassifier::Response &res) {
+void PclProcesser::SendCloudsToBeClassifed(){
 
-	this->my_classifier = req.classifier;
-	return (true);
+	gazebo_pkg::ObjectInspectionClassifyClouds classify_clouds_srv;
+	classify_clouds_srv.request.clouds_to_classify.reserve(this->clouds_to_process_vect.size());
+
+	for (size_t i = 0; i < this->clouds_to_process_vect.size(); i++){
+		sensor_msgs::PointCloud2 pointcloud2;
+		pcl::toROSMsg(this->clouds_to_process_vect[i], pointcloud2);
+		classify_clouds_srv.request.clouds_to_classify.push_back(pointcloud2);
+	}
+
+	if (this->send_clouds_to_classify.call(classify_clouds_srv)){
+		ROS_INFO("Clouds to be classified sent successfully!");
+	}
+	else{
+		ROS_INFO("Clouds to be classified NOT sent!");
+	}
 
 }
 
@@ -231,6 +243,20 @@ void PclProcesser::SaveCloudPCDs() {
 	}
 }
 
+void PclProcesser::CreateFinalCloudVector(){
+
+	std::vector<pcl::PointCloud<PointType>> final_cloud;
+
+	final_cloud.reserve(this->first_max_elements);
+
+	for (size_t i = 0; i < this->first_max_elements; i++){
+		final_cloud.push_back(this->clouds_to_process_vect[this->best_positions_indexes[i]]);
+	}
+
+	this->clouds_to_process_vect = final_cloud;
+
+}
+
 int PclProcesser::PointsInBoundingBoxManual(
 		pcl::PointCloud<PointType> cloud_to_proc) {
 
@@ -405,6 +431,7 @@ int PclProcesser::PointsInBoundingBoxManual(
 	extractor.filter(*to_remove_radius_cloud);
 
 	if (to_remove_radius_cloud->size()){
+		this->clouds_to_process_vect.push_back(*to_remove_radius_cloud);
 		this->contor++;
 		std::cerr << "contor: " << this->contor << std::endl;
 		std::string local_string;
@@ -513,13 +540,10 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 
 	if (!req.can_get_best_positions) {
 		this->cloud_to_process = this->cloud;
-		this->clouds_to_process_vect.push_back(this->cloud_to_process);
 		this->get_best_positions = false;
 	} else {
 		this->get_best_positions = true;
 	}
-	std::cerr << "clouds_to_process_vect size: "
-			<< this->clouds_to_process_vect.size() << std::endl;
 	std::cerr << "get_best_positions set to: " << this->get_best_positions
 			<< std::endl;
 
@@ -600,8 +624,10 @@ int main(int argc, char **argv) {
 					return 1;
 				}
 			} else {
-				processer.FindMaxElements(3);
+				processer.FindMaxElements(processer.first_max_elements);
+				processer.CreateFinalCloudVector();
 				processer.SaveCloudPCDs();
+				processer.SendCloudsToBeClassifed();
 			}
 
 			processer.can_process = false;

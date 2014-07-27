@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
 	obj.SHAPE = "box";
 	obj.MESH = false;
 	obj.SIZE = boxSizeVect;
+	obj.CLASSIFIER = 2;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -6.06;
 	obj.pose.position.z = 3;
@@ -52,6 +53,7 @@ int main(int argc, char **argv) {
 	obj.SHAPE = "cylinder";
 	obj.MESH = false;
 	obj.SIZE = cylinderSizeVect;
+	obj.CLASSIFIER = 4;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -6.8;
 	obj.pose.position.z = 3;
@@ -68,6 +70,7 @@ int main(int argc, char **argv) {
 	obj.SHAPE = "sphere";
 	obj.MESH = false;
 	obj.SIZE = sphereSizeVect;
+	obj.CLASSIFIER = 1;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -5.3;
 	obj.pose.position.z = 3;
@@ -84,6 +87,7 @@ int main(int argc, char **argv) {
 	obj.SHAPE = "pot";
 	obj.MESH = true;
 	obj.SIZE = sphereSizeVect;
+	obj.CLASSIFIER = 6;
 	obj.pose.position.x = -2.67;
 	obj.pose.position.y = -4.8;
 	obj.pose.position.z = 3;
