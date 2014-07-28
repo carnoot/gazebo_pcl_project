@@ -22,30 +22,21 @@
 
 namespace gazebo {
 
-/// \SystemGui Class
 class MoveKinectCameraPlugin: public SystemPlugin {
 
-	/// \ Constructor
 public:
 	MoveKinectCameraPlugin();
 
-public:
 	virtual ~MoveKinectCameraPlugin();
-
-/// \Load
-
-public:
 	virtual void Load(int /*_argc*/, char ** /*_argv*/);
-	void NextPoint();
-
-private:
 	virtual void Init();
 
-public:
 	void OnUpdate();
-	void CreatedWorld();
-	void InitCameraNode();bool CheckPointReached();
-	void CalcAndPublishNextPoint();bool getTextParam(
+	void NextPoint();
+	void InitCameraNode();
+	bool CheckPointReached();
+	void CalcAndPublishNextPoint();
+	bool getTextParam(
 			gazebo_pkg::GetTextParam::Request &req,
 			gazebo_pkg::GetTextParam::Response &res);
 	void setCameraPosition(
@@ -56,31 +47,11 @@ public:
 			gazebo_pkg::ObjectInspectionCenter::Response &);
 	void initService();
 
-	// Pointer to the model
 private:
-	physics::ModelPtr model;
-	rendering::VisualPtr cameraVisual;
-	rendering::VisualPtr arrowVisPtr;
-	Ogre::Entity *myEnt;
-	Ogre::Entity *myEnt2;
-	Ogre::Entity *myEnt3;
-	std::vector<rendering::VisualPtr> visualVect;
-	Ogre::SceneManager *sceneManager;
-	gazebo::sensors::SensorPtr cameraSensor;
-	Ogre::SceneNode *cameraNode;
-	math::Quaternion cameraQuaternion;
-	Ogre::Quaternion ogreCameraQuaternion;
-	Ogre::Vector3 ogreNewPosVect;
-	Ogre::SceneNode *x_axis, *y_axis, *z_axis;
-	std::vector<math::Pose> posVector;
-	int currentPos;
-	std::string cameraLinkName;
-	std::string cameraLinkAnimationName;
-	//Ogre::SceneManager::AnimationList *animList;
-	Ogre::Animation *cameraAnimation;
-	Ogre::AnimationState *cameraAnimationState;
 
 	int i, j, k;
+	int currentPos;
+
 	double x, y, z;
 	double x_offset, y_offset, z_offset;
 	double fi, teta;
@@ -92,10 +63,32 @@ private:
 	double camera_pos_x;
 	double camera_pos_y;
 	double camera_pos_z;
-
 	double lookAt_x;
 	double lookAt_y;
 	double lookAt_z;
+
+	Ogre::Entity *myEnt;
+	Ogre::Entity *myEnt2;
+	Ogre::Entity *myEnt3;
+	Ogre::Vector3 posToUse;
+	Ogre::Vector3 ogreNewPosVect;
+	Ogre::SceneNode *cameraNode;
+	Ogre::SceneNode *x_axis, *y_axis, *z_axis;
+	Ogre::Animation *cameraAnimation;
+	Ogre::Quaternion ogreCameraQuaternion;
+	Ogre::SceneManager *sceneManager;
+	Ogre::AnimationState *cameraAnimationState;
+
+	rendering::VisualPtr cameraVisual;
+	rendering::VisualPtr arrowVisPtr;
+
+	physics::ModelPtr model;
+
+	std::vector<rendering::VisualPtr> visualVect;
+	std::vector<math::Pose> posVector;
+
+	std::string cameraLinkName;
+	std::string cameraLinkAnimationName;
 
 	math::Pose newPos;
 	math::Matrix3 yRotationMatrix;
@@ -103,24 +96,26 @@ private:
 	math::Matrix3 pointToRotateMatrix;
 	math::Vector3 columnVect;
 	math::Vector3 zeroVect;
-	Ogre::Vector3 posToUse;
 	math::Matrix3 resultMatrix;
 	math::Matrix3 testMatrix1;
 	math::Matrix3 testMatrix2;
+	math::Quaternion cameraQuaternion;
+
 	event::ConnectionPtr updateConnection;
-	event::ConnectionPtr createdWorldConnection;
+
 	transport::NodePtr senderNode;
 	transport::NodePtr receiveNode;
 	transport::PublisherPtr publisher;
 	transport::SubscriberPtr subscriber;
+
 	custom_pose_message::msgs::CustomPoseRequest msgToSend;
+
+	ros::ServiceServer move_camera;
+	ros::ServiceServer get_object_center_service;
+	ros::AsyncSpinner *spinner;
 
 	bool called;bool present;bool anim;bool published;bool added;bool test_bool;bool look_now;bool position_ready;
 
-	ros::ServiceServer service;
-	ros::ServiceServer get_object_center_service;
-	ros::Subscriber sub;
-	ros::AsyncSpinner *spinner;
 
 };
 

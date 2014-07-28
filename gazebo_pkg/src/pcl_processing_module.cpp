@@ -3,26 +3,36 @@
 PclProcesser::PclProcesser(int argc, char **argv) {
 	ros::NodeHandle n;
 
-	this->first_max_elements = 3;
+	this->first_max_elements = 6;
 
-	this->service = n.advertiseService("get_cloud", &PclProcesser::GetCloud,
+	this->get_cloud = n.advertiseService("get_cloud", &PclProcesser::GetCloud,
 			this);
 
-	this->sub = n.subscribe("/camera/depth/points", 1000,
+	this->camera_depth_points_sub = n.subscribe("/camera/depth/points", 1000,
 			&PclProcesser::SaveClouds, this);
 
-	this->service_1 = n.advertiseService("get_object_bounding",
+	this->get_object_bounding = n.advertiseService("get_object_bounding",
 			&PclProcesser::GetObjectBounding, this);
 
 	this->get_cam_quaternion = n.advertiseService("get_cam_quaternion",
 			&PclProcesser::GetCamQuaternion, this);
 
+	this->get_correct_indexes = n.advertiseService("get_incorrect_indexes",
+			&PclProcesser::GetInCorrectIndexes, this);
+
 	this->can_send_next_pos = n.serviceClient<
 			gazebo_pkg::ObjectCanSendNextCamPos>("get_can_send_next_cam_pos");
 
-	this->send_clouds_to_classify = n.serviceClient<gazebo_pkg::ObjectInspectionClassifyClouds>("get_clouds_to_classify");
+	this->send_clouds_to_classify = n.serviceClient<
+			gazebo_pkg::ObjectInspectionClassifyClouds>(
+			"get_clouds_to_classify");
+
+	this->orig_cloud_to_save_base_path = "/home/furdek/final_test/";
+	this->final_cloud_to_save_base_path = "/home/furdek/kinect_sim_final";
 
 	this->can_process = false;
+	this->erase_bad_classifiers = false;
+
 	this->x_axis_ok = false;
 	this->y_axis_ok = false;
 	this->z_axis_ok = false;
@@ -31,7 +41,7 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->transform_matrix_axis = Eigen::Matrix4f::Identity();
 
 	this->clouds_processed = 0;
-	this->contor = 0;
+	this->final_cloud_to_save_contor = 0;
 	this->get_best_positions = false;
 
 	ROS_INFO("Ready to process clouds!");
@@ -42,21 +52,47 @@ PclProcesser::~PclProcesser() {
 
 }
 
-void PclProcesser::SendCloudsToBeClassifed(){
+bool PclProcesser::GetInCorrectIndexes(
+		gazebo_pkg::VFHTestCorrectIndexes::Request &req,
+		gazebo_pkg::VFHTestCorrectIndexes::Response &res) {
+
+	this->incorrect_indexes = req.correct_indexes;
+	this->erase_bad_classifiers = true;
+
+	return (true);
+
+}
+
+void PclProcesser::EraseBadClassifiers(){
+
+	int number_of_elements_erased = 0;
+
+	std::cerr << "best_positions' size: " << this->best_positions.size() << std::endl;
+	std::cerr << "incorrect_indexes' size: " << this->incorrect_indexes.size() << std::endl;
+
+	for (size_t i = 0; i < this->incorrect_indexes.size(); i++){
+		std::cerr << "incorrect index: " << this->incorrect_indexes[i] << std::endl;
+		this->best_positions.erase(this->best_positions.begin() + this->incorrect_indexes[i] - number_of_elements_erased);
+		number_of_elements_erased++;
+	}
+
+}
+
+void PclProcesser::SendCloudsToBeClassifed() {
 
 	gazebo_pkg::ObjectInspectionClassifyClouds classify_clouds_srv;
-	classify_clouds_srv.request.clouds_to_classify.reserve(this->clouds_to_process_vect.size());
+	classify_clouds_srv.request.clouds_to_classify.reserve(
+			this->clouds_to_process_vect.size());
 
-	for (size_t i = 0; i < this->clouds_to_process_vect.size(); i++){
+	for (size_t i = 0; i < this->clouds_to_process_vect.size(); i++) {
 		sensor_msgs::PointCloud2 pointcloud2;
 		pcl::toROSMsg(this->clouds_to_process_vect[i], pointcloud2);
 		classify_clouds_srv.request.clouds_to_classify.push_back(pointcloud2);
 	}
 
-	if (this->send_clouds_to_classify.call(classify_clouds_srv)){
+	if (this->send_clouds_to_classify.call(classify_clouds_srv)) {
 		ROS_INFO("Clouds to be classified sent successfully!");
-	}
-	else{
+	} else {
 		ROS_INFO("Clouds to be classified NOT sent!");
 	}
 
@@ -105,8 +141,6 @@ bool PclProcesser::GetCamQuaternion(
 	aux_matrix = this->aux_quaternion->GetAsMatrix4();
 	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
 
-//	std::cout << "aux_matrix: " << std::endl << aux_matrix << std::endl;
-
 	this->transform_matrix(0, 0) = aux_matrix[0][0];
 	this->transform_matrix(0, 1) = aux_matrix[0][1];
 	this->transform_matrix(0, 2) = aux_matrix[0][2];
@@ -116,9 +150,6 @@ bool PclProcesser::GetCamQuaternion(
 	this->transform_matrix(2, 0) = aux_matrix[2][0];
 	this->transform_matrix(2, 1) = aux_matrix[2][1];
 	this->transform_matrix(2, 2) = aux_matrix[2][2];
-
-//	std::cout << "transform_matrix: " << std::endl << this->transform_matrix
-//			<< std::endl;
 
 //################### ALINIEREA TOTALA A AXELOR PCL CU GAZEBO ##########################
 	this->aux_quaternion = new gazebo::math::Quaternion(1.57, 0, 1.57);
@@ -135,8 +166,6 @@ bool PclProcesser::GetCamQuaternion(
 	aux_matrix = this->aux_quaternion->GetAsMatrix4();
 	//################## TRANSFORM QUAT INTO ROTATION MATRIX ####################//
 
-//	std::cout << "aux_matrix_axis: " << std::endl << aux_matrix << std::endl;
-
 	this->transform_matrix_axis(0, 0) = aux_matrix[0][0];
 	this->transform_matrix_axis(0, 1) = aux_matrix[0][1];
 	this->transform_matrix_axis(0, 2) = aux_matrix[0][2];
@@ -146,18 +175,6 @@ bool PclProcesser::GetCamQuaternion(
 	this->transform_matrix_axis(2, 0) = aux_matrix[2][0];
 	this->transform_matrix_axis(2, 1) = aux_matrix[2][1];
 	this->transform_matrix_axis(2, 2) = aux_matrix[2][2];
-
-//	std::cout << "transform_matrix_axis: " << std::endl
-//			<< this->transform_matrix_axis << std::endl;
-
-//	this->cam_quaternion.w = this->quaternion_values[0];
-//	this->cam_quaternion.x = this->quaternion_values[1];
-//	this->cam_quaternion.y = this->quaternion_values[2];
-//	this->cam_quaternion.z = this->quaternion_values[3];
-
-//	std::cout << "QUAT RECEIVED: " << this->cam_quaternion->w << " "
-//			<< this->cam_quaternion->x << " " << this->cam_quaternion->y << " "
-//			<< this->cam_quaternion->z << std::endl;
 
 }
 
@@ -177,7 +194,7 @@ bool PclProcesser::GetObjectBounding(
 			<< this->bounding_max[0] << " " << this->bounding_max[1] << " "
 			<< this->bounding_max[2] << " " << std::endl;
 
-	return true;
+	return (true);
 
 }
 
@@ -218,7 +235,6 @@ void PclProcesser::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 
 	PointType point;
 
-	std::cerr << "Printing!" << std::endl;
 	std::cerr << "Size of cloud: " << cloud_to_display.size() << std::endl;
 
 	for (int a = 0; a < cloud_to_display.size(); a++) {
@@ -232,25 +248,24 @@ void PclProcesser::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 }
 
 void PclProcesser::SaveCloudPCDs() {
-	std::string orig_path;
-	orig_path = "/home/furdek/final_test/";
 	for (int i = 0; i < this->clouds_to_process_vect.size(); i++) {
 		std::string updated_path;
-		updated_path.append(orig_path);
+		updated_path.append(this->orig_cloud_to_save_base_path);
 		updated_path.append(std::to_string(i));
 		updated_path.append(".pcd");
 		pcl::io::savePCDFile(updated_path, this->clouds_to_process_vect[i]);
 	}
 }
 
-void PclProcesser::CreateFinalCloudVector(){
+void PclProcesser::CreateFinalCloudVector() {
 
 	std::vector<pcl::PointCloud<PointType>> final_cloud;
 
 	final_cloud.reserve(this->first_max_elements);
 
-	for (size_t i = 0; i < this->first_max_elements; i++){
-		final_cloud.push_back(this->clouds_to_process_vect[this->best_positions_indexes[i]]);
+	for (size_t i = 0; i < this->first_max_elements; i++) {
+		final_cloud.push_back(
+				this->clouds_to_process_vect[this->best_positions_indexes[i]]);
 	}
 
 	this->clouds_to_process_vect = final_cloud;
@@ -266,7 +281,9 @@ int PclProcesser::PointsInBoundingBoxManual(
 
 	PointType point;
 	PointType min_point, max_point;
+
 	int points_inside = 0;
+	float correction = 0.02;
 
 	pcl::PointCloud<PointType>::Ptr temp_cloud_PTR(
 			new pcl::PointCloud<PointType>(cloud_to_proc));
@@ -274,41 +291,6 @@ int PclProcesser::PointsInBoundingBoxManual(
 			new pcl::PointCloud<PointType>);
 
 	pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-
-//	this->PlaneSegmentationExtraction(temp_cloud_PTR);
-
-//	std::cerr << "DONE" << std::endl;
-
-//	this->DisplayPoints(this->cloud_to_process);
-
-//	pcl::getMinMax3D(this->filtered_cloud, min_point, max_point);
-//
-//	std::cerr << "min PointCloud values: " << min_point << std::endl;
-//	std::cerr << "max PointCloud values: " << max_point << std::endl;
-
-//################## MAJDNEM JO #########################//
-
-//	pcl::transformPointCloud(this->filtered_cloud,
-//			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
-//
-//	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
-//
-//	std::cerr << "min Rotated Axis PointCloud values: " << min_point
-//			<< std::endl;
-//	std::cerr << "max Rotated Axis PointCloud values: " << max_point
-//			<< std::endl;
-//
-//	pcl::transformPointCloud(this->rotated_axis_cloud_to_process,
-//			this->rotated_cloud_to_process, this->transform_matrix);
-//
-//	pcl::getMinMax3D(this->rotated_cloud_to_process, min_point, max_point);
-//
-//	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
-//	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
-
-//################## MAJDNEM JO #########################//
-
-//################## MAJDNEM JO #########################//
 
 	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
 
@@ -333,52 +315,10 @@ int PclProcesser::PointsInBoundingBoxManual(
 	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
 	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
 
-//################## MAJDNEM JO #########################//
-
-//	pcl::transformPointCloud(this->filtered_cloud,
-//			this->rotated_cloud_to_process, this->transform_matrix);
-//
-//	pcl::getMinMax3D(this->rotated_cloud_to_process, min_point, max_point);
-//
-//	std::cerr << "min Rotated PointCloud values: " << min_point << std::endl;
-//	std::cerr << "max Rotated PointCloud values: " << max_point << std::endl;
-//
-//	pcl::transformPointCloud(this->rotated_cloud_to_process,
-//			this->rotated_axis_cloud_to_process, this->transform_matrix_axis);
-//
-//	pcl::getMinMax3D(this->rotated_axis_cloud_to_process, min_point, max_point);
-//
-//	std::cerr << "min Rotated AXIS PointCloud values: " << min_point
-//			<< std::endl;
-//	std::cerr << "max Rotated AXIS PointCloud values: " << max_point
-//			<< std::endl;
-
-//
-//	pcl::transformPointCloud(this->rotated_axis_cloud_to_process,
-//			this->rotated_cloud_to_process, this->transform_matrix);
-//
-//
-//	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
-
-//	pcl::getMinMax3D(cloud_to_proc, min_point, max_point);
-//
-//	std::cerr << "min PointCloud values: " << min_point << std::endl;
-//	std::cerr << "max PointCloud values: " << max_point << std::endl;
-
 	std::cerr << this->rotated_cloud_to_process.size() << std::endl;
 
 	for (int i = 0; i < this->rotated_cloud_to_process.size(); i++) {
-
-//		std::cerr << i << std::endl;
-
 		point = this->rotated_cloud_to_process[i];
-
-//		if ((!isnan(point.x)) && (!isnan(point.y)) && (!isnan(point.z))) {
-//			std::cerr << "X: " << point.x << " y: " << point.y << " z: "
-//					<< point.z << std::endl;
-//		}
-
-		float correction = 0.02;
 
 		if ((point.x >= this->bounding_min[0] - correction)
 				&& (point.x <= this->bounding_max[0] + correction)) {
@@ -404,23 +344,6 @@ int PclProcesser::PointsInBoundingBoxManual(
 		this->y_axis_ok = false;
 		this->z_axis_ok = false;
 
-//		if ((point.x >= this->bounding_min[2])
-//				&& (point.x <= this->bounding_max[2])
-//				&& (point.y >= this->bounding_min[1])
-//				&& (point.y <= this->bounding_max[1])
-//				&& (point.z >= this->bounding_min[0])
-//				&& (point.z <= this->bounding_max[0])) {
-//			points_inside++;
-//		}
-
-//		if ((point.x - 1 >= this->bounding_min[0])
-//				&& (point.x - 1 <= this->bounding_max[0])
-//				&& (point.y - 1 >= this->bounding_max[3])
-//				&& (point.y - 1 <= this->bounding_min[3])
-//				&& (point.z - 0.4 >= this->bounding_min[2])
-//				&& (point.z - 0.4 <= this->bounding_max[2])) {
-//			points_inside++;
-//		}
 	}
 
 	pcl::ExtractIndices<PointType> extractor;
@@ -430,17 +353,15 @@ int PclProcesser::PointsInBoundingBoxManual(
 	extractor.setNegative(false);
 	extractor.filter(*to_remove_radius_cloud);
 
-	if (to_remove_radius_cloud->size()){
+	if (to_remove_radius_cloud->size()) {
 		this->clouds_to_process_vect.push_back(*to_remove_radius_cloud);
-		this->contor++;
-		std::cerr << "contor: " << this->contor << std::endl;
+		this->final_cloud_to_save_contor++;
 		std::string local_string;
-		local_string.append("/home/furdek/kinect_sim_final");
-		local_string.append(std::to_string(this->contor));
+		local_string.append(this->final_cloud_to_save_base_path);
+		local_string.append(std::to_string(this->final_cloud_to_save_contor));
 		local_string.append(".pcd");
 		std::cerr << "path to save to: " << local_string << std::endl;
-		pcl::io::savePCDFile(local_string,
-				*to_remove_radius_cloud);
+		pcl::io::savePCDFile(local_string, *to_remove_radius_cloud);
 	}
 
 	this->clouds_processed++;
@@ -524,9 +445,9 @@ void PclProcesser::SaveClouds(
 	pcl::fromROSMsg(*message, this->cloud);
 }
 
-void PclProcesser::DisplayResults() {
-	for (int i = 0; i < this->result_vect.size(); i++) {
-		std::cerr << this->result_vect[i] << " ";
+void PclProcesser::DisplayResults(std::vector<int> display_vect) {
+	for (int i = 0; i < display_vect.size(); i++) {
+		std::cerr << display_vect[i] << " ";
 	}
 	std::cerr << std::endl;
 }
@@ -556,12 +477,9 @@ void PclProcesser::PlaneSegmentationExtraction(
 	pcl::PointCloud<PointType>::Ptr to_remove_radius_cloud(
 			new pcl::PointCloud<PointType>);
 
-//	pcl::PointCloud<PointType>::Ptr temp_cloud(
-//			new pcl::PointCloud<PointType>(cloud));
-
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
 	pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-// Create the segmentation object
+
 	pcl::SACSegmentation<PointType> seg;
 
 	seg.setOptimizeCoefficients(true);
@@ -598,16 +516,14 @@ void PclProcesser::PlaneSegmentationExtraction(
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "pcl_processing");
-	std::cerr << "constructor elott" << std::endl;
 	PclProcesser processer(argc, argv);
-	std::cerr << "constructor utan" << std::endl;
 
 	ros::AsyncSpinner *spinner = new ros::AsyncSpinner(1);
 	spinner->start();
 
 	while (ros::ok()) {
 
-		if (processer.can_process == true) {
+		if (processer.can_process) {
 			std::cerr << "processing" << std::endl;
 
 			std::cerr
@@ -615,7 +531,7 @@ int main(int argc, char **argv) {
 							processer.cloud_to_process) << std::endl;
 
 			if (!processer.get_best_positions) {
-				processer.DisplayResults();
+				processer.DisplayResults(processer.result_vect);
 				gazebo_pkg::ObjectCanSendNextCamPos object_can_send_srv;
 				if (processer.can_send_next_pos.call(object_can_send_srv)) {
 					ROS_INFO("ObjectCanSendNextCamPos OK!");
@@ -633,7 +549,17 @@ int main(int argc, char **argv) {
 			processer.can_process = false;
 		}
 
-//		if ()
+		if (processer.erase_bad_classifiers){
+
+			processer.DisplayResults(processer.best_positions);
+
+			processer.EraseBadClassifiers();
+
+			processer.DisplayResults(processer.best_positions);
+
+			processer.erase_bad_classifiers = false;
+
+		}
 
 	}
 	return 0;

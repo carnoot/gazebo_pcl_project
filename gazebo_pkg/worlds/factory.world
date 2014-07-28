@@ -18,10 +18,6 @@
     </include>
     
     <include>
-      <uri>model://box1</uri>
-    </include>
-    
-    <include>
       <uri>model://box_wall</uri>
     </include>
         

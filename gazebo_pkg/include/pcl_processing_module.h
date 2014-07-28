@@ -10,6 +10,8 @@
 #include "gazebo_pkg/ObjectInspectionClassifier.h"
 #include "gazebo_pkg/ObjectInspectionClassifyClouds.h"
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
+#include "gazebo_pkg/VFHTestCorrectIndexes.h"
+
 #include "pcl_conversions/pcl_conversions.h"
 #include "pcl/pcl_base.h"
 #include "pcl/io/pcd_io.h"
@@ -46,58 +48,69 @@ public:
 			gazebo_pkg::ObjectInspectionQuaternion::Response &);
 	void SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &);
 	void SendCloudsToBeClassifed();
+	void EraseBadClassifiers();
 	bool GetObjectBounding(
 			gazebo_pkg::ObjectInspectionBounding::Request &,
 			gazebo_pkg::ObjectInspectionBounding::Response &);
+	bool GetInCorrectIndexes(gazebo_pkg::VFHTestCorrectIndexes::Request &,
+			gazebo_pkg::VFHTestCorrectIndexes::Response &);
 	int PointsInBoundingBoxManual(pcl::PointCloud<PointType>);
 	int PointsInBoundingBoxPcl(pcl::PointCloud<PointType>);
 	void FindMaxElements(int);
 	void CreateFinalCloudVector();
 	void PlaneSegmentationExtraction(const pcl::PointCloud<PointType>::Ptr);
 	void DisplayPoints(pcl::PointCloud<PointType> &);
-	void DisplayResults();
+	void DisplayResults(std::vector<int>);
 	void SaveCloudPCDs();
 
-public:
+	int clouds_processed;
+	int first_max_elements;
+	int final_cloud_to_save_contor;
+
+	float bounding_min[3];
+	float bounding_max[3];
+
+	double quaternion_values[4];
 
 	std::vector<int> result_vect;
 	std::vector<int> best_positions;
 	std::vector<int> best_positions_indexes;
+	std::vector<int> incorrect_indexes;
 	std::vector<pcl::PointCloud<PointType>> clouds_to_process_vect;
-	int clouds_processed;
-	int contor;
-	int first_max_elements;
-	std::string my_classifier;
-	float bounding_min[3];
-	float bounding_max[3];
-	Eigen::Vector4f min_pt;
-	Eigen::Vector4f max_pt;
 
 	std::mutex mut;
+	std::string my_classifier;
+	std::string orig_cloud_to_save_base_path;
+	std::string final_cloud_to_save_base_path;
 
-	ros::ServiceServer service;
-	ros::ServiceServer service_1;
+	Eigen::Vector4f min_pt;
+	Eigen::Vector4f max_pt;
+	Eigen::Matrix4f transform_matrix;
+	Eigen::Matrix4f transform_matrix_axis;
+
+	gazebo::math::Quaternion *cam_quaternion;
+	gazebo::math::Quaternion *aux_quaternion;
+
+	ros::Subscriber camera_depth_points_sub;
+
+	ros::ServiceServer get_cloud;
+	ros::ServiceServer get_object_bounding;
 	ros::ServiceServer get_cam_quaternion;
 	ros::ServiceServer get_classifier;
+	ros::ServiceServer get_correct_indexes;
+
 	ros::ServiceClient can_send_next_pos;
 	ros::ServiceClient send_clouds_to_classify;
-	ros::Subscriber sub;
+
 	pcl::PointCloud<PointType> cloud;
 	pcl::PointCloud<PointType> cloud_to_process;
 	pcl::PointCloud<PointType> *cloud_ptr;
 	pcl::PointCloud<PointType> cloud_after_processing;
 	pcl::PointCloud<PointType> rotated_cloud_to_process;
 	pcl::PointCloud<PointType> rotated_axis_cloud_to_process;
-	pcl::PointCloud<pcl::PointXYZRGB> filtered_cloud;
+	pcl::PointCloud<PointType> filtered_cloud;
 
-	gazebo::math::Quaternion *cam_quaternion;
-	gazebo::math::Quaternion *aux_quaternion;
-	Eigen::Matrix4f transform_matrix;
-	Eigen::Matrix4f transform_matrix_axis;
-
-	double quaternion_values[4];
-
-	bool can_process;bool get_best_positions;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;
+	bool can_process;bool get_best_positions;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool erase_bad_classifiers;
 
 };
 

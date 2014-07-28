@@ -5,11 +5,6 @@
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "add_object_client");
-//  if (argc != 1)
-//  {
-//    ROS_INFO("usage: add_object_client ID(int) COLOR(string) SHAPE(string) Pose(Point-x,y,z - Quaternion - i,j,k,w)");
-//    return 1;
-//  }
 
 	ros::NodeHandle n;
 	ros::ServiceClient client = n.serviceClient<gazebo_pkg::GetObject>(
@@ -102,9 +97,9 @@ int main(int argc, char **argv) {
 	gazebo_pkg::GetObject srv;
 	srv.request.msg = test_vect;
 	if (client.call(srv)) {
-		ROS_INFO("OK!");
+		ROS_INFO("Objects Added Successfully!");
 	} else {
-		ROS_ERROR("Not OK!");
+		ROS_ERROR("Objects NOT Added!");
 		return 1;
 	}
 

@@ -10,6 +10,7 @@
 #include "gazebo_pkg/ObjectInspectionClassifier.h"
 #include "gazebo_pkg/ObjectInspectionClassifyClouds.h"
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
+#include "gazebo_pkg/VFHTestCorrectIndexes.h"
 
 #include "ml_classifiers/CreateClassifier.h"
 #include "ml_classifiers/AddClassData.h"
@@ -71,7 +72,7 @@ public:
 	void SaveClouds(const sensor_msgs::PointCloud2::ConstPtr &);
 
 	void DisplayPoints(pcl::PointCloud<PointType> &);
-	void DisplayResults();
+	void DisplayResults(std::vector<float>);
 	void ProcessResults();
 
 	bool GetClassifier(gazebo_pkg::ObjectInspectionClassifier::Request &,
@@ -122,8 +123,17 @@ public:
 
 	std::vector<std::string> GetNumberOfSVMDataTypes();
 
+	std::vector<std::string> DifferentClassifiersVector(
+			std::vector<std::string> &);
+
 	float CalculatePercentageOfFitness(float, std::string,
 			std::vector<std::string>);
+
+	std::vector<float> CalculateAllPercentagesOfFitness(
+			float, std::vector<std::string>,
+					std::vector<std::string>);
+
+	std::vector<int> GetInCorrectIndexes();
 
 	void SeparateSVMData(std::vector<std::string> class_types_vector);
 
@@ -146,6 +156,7 @@ public:
 	std::vector<int> result_vect;
 	std::vector<vfh_model> models;
 	std::vector<int> model_label_values;
+	std::vector<int> correct_indexes;
 
 	std::vector<std::vector<double>> data_points;
 	std::vector<std::string> data_points_labels;
@@ -195,6 +206,7 @@ public:
 	ros::ServiceClient add_svm_class_data;
 	ros::ServiceClient train_svm_classifier;
 	ros::ServiceClient classify_svm_data;
+	ros::ServiceClient send_incorrect_indexes_client;
 
 	ros::Subscriber sub;
 
@@ -213,7 +225,7 @@ public:
 
 	double quaternion_values[4];
 
-	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool classifier_ready;bool can_classify;
+	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool classifier_ready;bool can_classify; bool classify_ready;
 
 };
 

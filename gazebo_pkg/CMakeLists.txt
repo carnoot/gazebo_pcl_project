@@ -55,6 +55,7 @@ add_service_files(
 	ObjectInspectionClassifier.srv
 	ObjectInspectionClassifyClouds.srv
 	Classifier.srv
+	VFHTestCorrectIndexes.srv
 )
 
 generate_messages(   

@@ -20,32 +20,22 @@
 
 namespace gazebo {
 
-/// \Bla bla
-
 class RosGetCoord: public WorldPlugin {
 
 public:
 	RosGetCoord();
 
-//public : ~RosPlugin();
-
-/// \The Load Method
-public:
 	void Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf);
 
-//public:
-//	bool GetCoord(gazebo_pkg::GetCoordFromClient::Request &req,
-//			gazebo_pkg::GetCoordFromClient::Response &res);
-
-public:
 	bool GetObjects(gazebo_pkg::GetObject::Request &req,
-			gazebo_pkg::GetObject::Response &res);bool ObjectToInspect(
+			gazebo_pkg::GetObject::Response &res);
+	bool ObjectToInspect(
 			gazebo_pkg::ObjectInspectionNumber::Request &,
-			gazebo_pkg::ObjectInspectionNumber::Response &);bool PassObjectCenter(
+			gazebo_pkg::ObjectInspectionNumber::Response &);
+	bool PassObjectCenter(
 			gazebo_pkg::ObjectInspectionStart::Request &,
 			gazebo_pkg::ObjectInspectionStart::Response &);
 
-public:
 	std::string CreatePositionString(gazebo_pkg::Object);
 	std::string CreateModelNameString(gazebo_pkg::Object);
 	std::string CreateMaterialColor(gazebo_pkg::Object);
@@ -53,21 +43,23 @@ public:
 	std::string CreateGeometry(gazebo_pkg::Object);
 	std::string CreateMesh(gazebo_pkg::Object);
 	void CreateShape(gazebo_pkg::Object);
+
+	boost::shared_ptr<gazebo::physics::Model> GetSelectedModel(
+			int);
+
 	std::string AddStaticAttribute(bool);
 	std::vector<float> QuaternionToEuler(float, float, float, float);
-	std::string ConvertFloat(float);bool PassCameraPosition(
+	std::string ConvertFloat(float);
+	bool PassCameraPosition(
 			gazebo_pkg::ObjectInspectionCameraPos::Request &,
 			gazebo_pkg::ObjectInspectionCameraPos::Response &);
-	void OnUpdate();
 
-public:
 	ros::AsyncSpinner *spinner;
 
-public:
-	ros::ServiceServer service;
-	ros::ServiceServer service_1;
-	ros::ServiceServer service_2;
-	ros::ServiceServer service_3;
+	ros::ServiceServer get_object;
+	ros::ServiceServer object_to_inspect;
+	ros::ServiceServer pass_camera_position;
+	ros::ServiceServer pass_object_center;
 	ros::ServiceClient send_classifier;
 	event::ConnectionPtr updateConnection;
 
@@ -79,12 +71,10 @@ private:
 	float camera_pos_x;
 	float camera_pos_y;
 	float camera_pos_z;
-	float process_offset;
 
 	math::Box bounding_box;
-	std::vector<float> object_center;bool primit_coord;
+	std::vector<float> object_center;
 
-private:
 	physics::WorldPtr parent;
 
 };

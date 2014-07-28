@@ -6,11 +6,6 @@ MoveKinectCameraPlugin::MoveKinectCameraPlugin() {
 	this->initService();
 	this->added = true;
 	this->test_bool = true;
-
-	std::cerr << "ConnectWorldConnection" << std::endl;
-
-	this->createdWorldConnection = event::Events::ConnectWorldCreated(
-			boost::bind(&MoveKinectCameraPlugin::CreatedWorld, this));
 }
 
 MoveKinectCameraPlugin::~MoveKinectCameraPlugin() {
@@ -55,26 +50,11 @@ void MoveKinectCameraPlugin::Load(int /*_argc*/, char ** /*_argv*/) {
 
 }
 
-void MoveKinectCameraPlugin::CreatedWorld() {
-
-	std::cout << "CREATEDDDDDDDD: " << physics::get_world("balint")->GetName()
-			<< std::endl;
-
-}
-
 void MoveKinectCameraPlugin::Init() {
 
 	std::cout << "INIT" << std::endl;
 
 	this->sceneManager = gui::get_active_camera()->GetScene()->GetManager();
-//	this->cameraSensor = gazebo::sensors::SensorManager::Instance()->GetSensors().size()
-
-//	std::cout << this->cameraSensor->GetType() << std::endl;
-//	std::cout << this->cameraSensor->GetWorldName() << std::endl;;
-//	std::cout << this->cameraSensor->GetPose() << std::endl;
-//	this->cameraVisual = gui::get_active_camera()->GetScene()->GetVisual(
-//			this->cameraLinkName);
-	//this->cameraNode = this->sceneManager->getRootSceneNode()->createChildSceneNode(*new Ogre::Vector3(0,0,0),this->sceneManager->getRootSceneNode()->getOrientation());
 
 	this->xRotationMatrix = math::Matrix3(1, 0, 0, 0, cos(this->rotationAngle),
 			sin(this->rotationAngle), 0, -sin(this->rotationAngle),
@@ -82,8 +62,6 @@ void MoveKinectCameraPlugin::Init() {
 	this->yRotationMatrix = math::Matrix3(cos(this->rotationAngle), 0,
 			-sin(this->rotationAngle), 0, 1, 0, sin(this->rotationAngle), 0,
 			cos(this->rotationAngle));
-
-	//this->mapIter = this->sceneManager->getCameras().begin();
 
 	std::cout << "before senderNode INIT" << std::endl;
 
@@ -139,25 +117,7 @@ void MoveKinectCameraPlugin::setCameraPosition(
 	this->camera_pos_y = pose_msg->pos_y();
 	this->camera_pos_z = pose_msg->pos_z();
 
-//	this->cameraVisual->SetWorldPose(
-//			*new math::Pose(this->camera_pos_x, this->camera_pos_y,
-//					this->camera_pos_z, 0, 0, 0));
-
-//	this->cameraVisual->SetWorldPosition(
-//			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
-//					this->camera_pos_z));
-
-//	this->cameraVisual->SetPosition(
-//			*new math::Vector3(this->camera_pos_x, this->camera_pos_y,
-//					this->camera_pos_z));
-//
-//	std::cout << "Position READY!" << std::endl;
-//
 	this->position_ready = true;
-
-//	std::cout << "RECEIVED X = " << pose_msg->pos_x() << std::endl;
-//	std::cout << "RECEIVED Y = " << pose_msg->pos_y() << std::endl;
-//	std::cout << "RECEIVED Z = " << pose_msg->pos_z() << std::endl;
 
 }
 
@@ -255,7 +215,7 @@ void MoveKinectCameraPlugin::initService() {
 	ros::init(argc, argv, "get_camera_movement");
 
 	ros::NodeHandle n;
-	this->service = n.advertiseService("move_camera",
+	this->move_camera = n.advertiseService("move_camera",
 			&MoveKinectCameraPlugin::getTextParam, this);
 
 	this->spinner = new ros::AsyncSpinner(1);
@@ -274,14 +234,7 @@ bool MoveKinectCameraPlugin::getTextParam(
 
 void MoveKinectCameraPlugin::CalcAndPublishNextPoint() {
 
-	//this->teta = this->teta + 0.1;
 	this->NextPoint();
-
-//	this->posToUse.x = this->newPos.pos.x;
-//	this->posToUse.y = this->newPos.pos.y;
-//	this->posToUse.z = this->newPos.pos.z;
-
-	//this->cameraVisual->GetSceneNode()->setPosition(this->posToUse);
 
 	std::cout << "SceneNode Position:"
 			<< this->cameraVisual->GetSceneNode()->getPosition() << std::endl;
@@ -325,13 +278,9 @@ void MoveKinectCameraPlugin::CalcAndPublishNextPoint() {
 
 void MoveKinectCameraPlugin::OnUpdate() {
 
-//	std::cout << "OnUpdate" << std::endl;
-
 	if (this->present == false) {
-//		this->model->GetLink()
 		gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
 				*new math::Vector3(-3.45, -4.35, 4), this->visualVect);
-//		std::cout << "WORLD: " << gui::get_world() << std::endl;
 	}
 
 	if (this->visualVect.size() != 0 && this->present == false) {
@@ -342,21 +291,12 @@ void MoveKinectCameraPlugin::OnUpdate() {
 		this->myEnt2->setMaterialName("Gazebo/Green");
 		this->myEnt3 = this->sceneManager->createEntity("axis_shaft");
 		this->myEnt3->setMaterialName("Gazebo/Blue");
-//		this->myEnt = this->sceneManager->createEntity(
-//				Ogre::SceneManager::PT_CUBE);
 		std::cout << "AXIS Entity CREATED" << std::endl;
 		for (int j = 0; j < this->visualVect.size(); j++)
 			this->cameraVisual =
 					gui::get_active_camera()->GetScene()->GetVisual(
 							this->cameraLinkName);
-//		std::cout << "ARROW VIS PTR" << std::endl;
-//		this->arrowVisPtr = gui::get_active_camera()->GetScene()->GetVisual(
-//				"box1::link::visual");
-		//gui::get_active_camera()->GetScene()->PrintSceneGraph();
 		std::cout << "InsertingMesh" << std::endl;
-//		std::cout << this->arrowVisPtr->GetName() << std::endl;
-//		this->arrowVisPtr->InsertMesh("axis_shaft");
-//		std::cout << "InsertingMeshEND" << std::endl;
 		this->present = true;
 	}
 
@@ -390,20 +330,14 @@ void MoveKinectCameraPlugin::OnUpdate() {
 		this->z_axis->translate(0, 0, 0.17);
 		this->z_axis->attachObject((Ogre::MovableObject*) this->myEnt3);
 		std::cout << "Z AXIS CREATED" << std::endl;
-//		gui::get_active_camera()->GetScene()->GetVisual("box1::link::visual")->GetSceneNode()->createChildSceneNode(
-//				"faszki")->attachObject((Ogre::MovableObject*) this->myEnt);
-//		gui::get_active_camera()->GetScene()->GetVisual("box1::link::visual")->GetSceneNode()->createChildSceneNode(
-//				"faszki")->attachObject((Ogre::MovableObject*) this->myEnt);
 		std::cout << "CHILD SCENE NODE CREATED" << std::endl;
 		for (int j = 0; j < this->visualVect.size(); j++) {
 			std::cout << this->visualVect[j]->GetName() << std::endl;
 		}
 		this->added = false;
-//		this->cameraVisual->AttachAxes();
 	}
 
 	if (this->present == true && this->added == false) {
-//		std::cerr << "NOW" << std::endl;
 		if (this->test_bool) {
 			gui::get_active_camera()->GetScene()->GetVisualsBelowPoint(
 					*new math::Vector3(-3.984, -4.672, 4), this->visualVect);
@@ -411,12 +345,6 @@ void MoveKinectCameraPlugin::OnUpdate() {
 		}
 
 		if (this->look_now && this->position_ready) {
-
-//			this->cameraVisual->GetSceneNode()->setPosition(
-//					*new Ogre::Vector3(this->camera_pos_x, this->camera_pos_y,
-//							this->camera_pos_z));
-
-//			std::cerr << "LOOK AT !" << std::endl;
 
 			std::cout << this->cameraVisual->GetSceneNode()->getOrientation().w
 					<< " "
@@ -462,17 +390,6 @@ void MoveKinectCameraPlugin::OnUpdate() {
 			this->position_ready = false;
 
 		}
-
-//		std::cout << this->cameraVisual->GetSceneNode()->getOrientation()
-//				<< std::endl;
-
-//		std::cout << this->model->GetName() << std::endl;
-//		std::cout << this->cameraVisual->GetName() << std::endl;
-//		kinect::camera_link::camera_link_visual
-
-//		for (int j = 0; j < this->visualVect.size(); j++) {
-//					std::cout << this->visualVect[j]->GetName() << std::endl;
-//				}
 	}
 }
 

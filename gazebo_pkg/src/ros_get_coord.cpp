@@ -10,40 +10,28 @@ RosGetCoord::RosGetCoord() {
 	ros::init(argc, argv, "get_object_server");
 
 	ros::NodeHandle n;
-	this->service = n.advertiseService("get_object", &RosGetCoord::GetObjects,
-			this);
+	this->get_object = n.advertiseService("get_object",
+			&RosGetCoord::GetObjects, this);
 
-	this->service_1 = n.advertiseService("object_to_inspect",
+	this->object_to_inspect = n.advertiseService("object_to_inspect",
 			&RosGetCoord::ObjectToInspect, this);
 
-	this->service_2 = n.advertiseService("pass_camera_position",
+	this->pass_camera_position = n.advertiseService("pass_camera_position",
 			&RosGetCoord::PassCameraPosition, this);
 
-	this->service_3 = n.advertiseService("pass_object_center",
+	this->pass_object_center = n.advertiseService("pass_object_center",
 			&RosGetCoord::PassObjectCenter, this);
 
-	this->send_classifier = n.serviceClient<gazebo_pkg::ObjectInspectionClassifier>("get_classifier");
+	this->send_classifier = n.serviceClient<
+			gazebo_pkg::ObjectInspectionClassifier>("get_classifier");
 
-	this->process_offset = 10;
-
-	ROS_INFO("Waiting for coordinates!");
-
-}
-
-void RosGetCoord::OnUpdate() {
-
-//	std::cerr << "Model count: " << this->parent->GetModelCount() << std::endl;
-//	for (int i = 0; i < this->parent->GetModelCount(); i++){
-//	std::cerr << this->parent->GetModel(i)->GetName() << std::endl;
-//	}
+	ROS_INFO("Ready to insert models!");
 
 }
 
-bool RosGetCoord::PassObjectCenter(
-		gazebo_pkg::ObjectInspectionStart::Request &req,
-		gazebo_pkg::ObjectInspectionStart::Response &res) {
+boost::shared_ptr<gazebo::physics::Model> RosGetCoord::GetSelectedModel(
+		int nr) {
 
-	int nr = req.number;
 	int name_nr = 0;
 
 	for (int i = 0; i < this->parent->GetModelCount(); i++) {
@@ -63,8 +51,18 @@ bool RosGetCoord::PassObjectCenter(
 
 	}
 
+	return (this->parent->GetModel(nr));
+
+}
+
+bool RosGetCoord::PassObjectCenter(
+		gazebo_pkg::ObjectInspectionStart::Request &req,
+		gazebo_pkg::ObjectInspectionStart::Response &res) {
+
+	int nr = req.number;
+
 	boost::shared_ptr<gazebo::physics::Model> model_ptr =
-			this->parent->GetModel(nr);
+			this->GetSelectedModel(nr);
 
 	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
 			model_ptr->GetBoundingBox().max);
@@ -74,7 +72,7 @@ bool RosGetCoord::PassObjectCenter(
 	res.centerPoint.elems[1] = this->bounding_box.GetCenter().y;
 	res.centerPoint.elems[2] = this->bounding_box.GetCenter().z;
 
-	return true;
+	return (true);
 
 }
 
@@ -100,29 +98,11 @@ bool RosGetCoord::ObjectToInspect(
 		gazebo_pkg::ObjectInspectionNumber::Response &res) {
 
 	int nr = req.number;
-	int name_nr = 0;
+	float aux_bounding;
 
-	for (int i = 0; i < this->parent->GetModelCount(); i++) {
-		boost::shared_ptr<gazebo::physics::Model> model_ptr =
-				this->parent->GetModel(i);
+	boost::shared_ptr<gazebo::physics::Model> model_ptr = this->GetSelectedModel(nr);
 
-		name_nr =
-				atoi(
-						model_ptr->GetSDF()->GetAttribute("name")->GetAsString().c_str());
-		if (nr == name_nr) {
-			std::cerr << "Name of model: "
-					<< model_ptr->GetSDF()->GetAttribute("name")->GetAsString()
-					<< std::endl;
-			nr = i;
-			break;
-		}
-
-	}
-
-	boost::shared_ptr<gazebo::physics::Model> model_ptr =
-			this->parent->GetModel(nr);
-
-	physics::ModelPtr my_model = this->parent->GetModel(nr);
+	std::cerr << "String name of model: " << model_ptr->GetName() << std::endl;
 
 	this->bounding_box = math::Box(model_ptr->GetBoundingBox().min,
 			model_ptr->GetBoundingBox().max);
@@ -168,29 +148,20 @@ bool RosGetCoord::ObjectToInspect(
 			"get_object_bounding");
 
 	gazebo_pkg::ObjectInspectionBounding srv1;
-//	srv1.request.BoundingMin.elems[0] = this->camera_pos_x - this->bounding_box.min.x;
-//	srv1.request.BoundingMin.elems[1] = this->camera_pos_y - this->bounding_box.min.y;
-//	srv1.request.BoundingMin.elems[2] = this->camera_pos_z - this->bounding_box.min.z;
-//
-//	srv1.request.BoundingMax.elems[0] = this->camera_pos_x - this->bounding_box.max.x;
-//	srv1.request.BoundingMax.elems[1] = this->camera_pos_y - this->bounding_box.max.y;
-//	srv1.request.BoundingMax.elems[2] = this->camera_pos_z - this->bounding_box.max.z;
 
-//################# HIBAS !!! ####################
 	srv1.request.BoundingMin.elems[0] = this->bounding_box.min.x
-			- this->camera_pos_x; //this->process_offset;
+			- this->camera_pos_x;
 	srv1.request.BoundingMin.elems[1] = this->bounding_box.min.y
-			- this->camera_pos_y; //this->process_offset;
+			- this->camera_pos_y;
 	srv1.request.BoundingMin.elems[2] = this->bounding_box.min.z
-			- this->camera_pos_z; //this->process_offset;
+			- this->camera_pos_z;
 
 	srv1.request.BoundingMax.elems[0] = this->bounding_box.max.x
-			- this->camera_pos_x; //this->process_offset;
+			- this->camera_pos_x;
 	srv1.request.BoundingMax.elems[1] = this->bounding_box.max.y
-			- this->camera_pos_y; //this->process_offset;
+			- this->camera_pos_y;
 	srv1.request.BoundingMax.elems[2] = this->bounding_box.max.z
-			- this->camera_pos_z; //+ this->process_offset;
-	//################# HIBAS !!! ####################
+			- this->camera_pos_z;
 
 	std::cerr << "MIN BOUNDING SRV BEFORE: "
 			<< srv1.request.BoundingMin.elems[0] << " "
@@ -200,8 +171,6 @@ bool RosGetCoord::ObjectToInspect(
 	std::cerr << "MAX BOUNDING SRV AFTER: " << srv1.request.BoundingMax.elems[0]
 			<< " " << srv1.request.BoundingMax.elems[1] << " "
 			<< srv1.request.BoundingMax.elems[2] << std::endl;
-
-	float aux_bounding;
 
 	//#################### HACK ##########################//
 	aux_bounding = -srv1.request.BoundingMin.elems[1];
@@ -229,19 +198,16 @@ bool RosGetCoord::ObjectToInspect(
 
 	gazebo_pkg::ObjectInspectionClassifier my_classifier_srv;
 
-	for (size_t m = 0; m < this->pair_values.size(); m++){
+	for (size_t m = 0; m < this->pair_values.size(); m++) {
 		if (this->pair_values[m].first == req.number)
 			my_classifier_srv.request.classifier = this->pair_values[m].second;
 	}
 
-	if (this->send_classifier.call(my_classifier_srv)){
+	if (this->send_classifier.call(my_classifier_srv)) {
 		ROS_INFO("Object Classifier Sent Successfully!");
-	}
-	else
-	{
+	} else {
 		ROS_ERROR("Object Classifier Sending Failed!");
 	}
-
 
 	return true;
 
@@ -267,31 +233,27 @@ bool RosGetCoord::GetObjects(gazebo_pkg::GetObject::Request &req,
 
 	}
 
-	for (int i = 0; i < this->pair_values.size(); i++){
-		std::cerr << "values: " << this->pair_values[i].first << " " << this->pair_values[i].second << std::endl;
+	for (int i = 0; i < this->pair_values.size(); i++) {
+		std::cerr << "values: " << this->pair_values[i].first << " "
+				<< this->pair_values[i].second << std::endl;
 	}
 
-	return true;
+	return (true);
 }
 
 void RosGetCoord::Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf) {
 
 	this->parent = _parent;
 
-	this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-			boost::bind(&RosGetCoord::OnUpdate, this));
-
 	this->spinner = new ros::AsyncSpinner(1);
 	this->spinner->start();
-
-	ROS_INFO("spinning");
 
 }
 
 std::string RosGetCoord::ConvertFloat(float a) {
 	std::ostringstream buff;
 	buff << a;
-	return buff.str();
+	return (buff.str());
 }
 
 std::vector<float> RosGetCoord::QuaternionToEuler(float w, float x, float y,
@@ -304,7 +266,7 @@ std::vector<float> RosGetCoord::QuaternionToEuler(float w, float x, float y,
 	localVector.push_back(quat.GetAsEuler().y);
 	localVector.push_back(quat.GetAsEuler().z);
 
-	return localVector;
+	return (localVector);
 
 }
 
@@ -334,7 +296,7 @@ std::string RosGetCoord::CreatePositionString(gazebo_pkg::Object obj) {
 	localString.append(converter.str());
 	localString.append(" ");
 
-	return localString;
+	return (localString);
 
 }
 
@@ -365,7 +327,7 @@ std::string RosGetCoord::CreateOrientationString(gazebo_pkg::Object obj) {
 	localString.append(converter.str());
 	localString.append("</pose>\n");
 
-	return localString;
+	return (localString);
 
 }
 
@@ -384,7 +346,7 @@ std::string RosGetCoord::CreateModelNameString(gazebo_pkg::Object obj) {
 	localString.append(converter.str());
 	localString.append("'>\\");
 
-	return localString;
+	return (localString);
 
 }
 
@@ -457,7 +419,7 @@ std::string RosGetCoord::CreateGeometry(gazebo_pkg::Object obj) {
 
 	}
 
-	return localString;
+	return (localString);
 
 }
 
@@ -483,7 +445,7 @@ std::string RosGetCoord::CreateMaterialColor(gazebo_pkg::Object obj) {
 	localString.append("</script>\n");
 	localString.append("</material>\n");
 
-	return localString;
+	return (localString);
 
 //<material name="orange"/>
 
@@ -502,7 +464,7 @@ std::string RosGetCoord::CreateMesh(gazebo_pkg::Object obj) {
 	localString.append("<scale>1 1 1</scale>\n");
 	localString.append("</mesh>");
 
-	return localString;
+	return (localString);
 
 }
 
@@ -517,7 +479,7 @@ std::string RosGetCoord::AddStaticAttribute(bool _static) {
 	}
 	localString.append("</static>\n");
 
-	return localString;
+	return (localString);
 }
 
 void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
@@ -570,5 +532,4 @@ void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 
 }
 
-// Register this plugin with the simulator
 GZ_REGISTER_WORLD_PLUGIN(RosGetCoord)

@@ -1,22 +1,25 @@
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <gazebo.hh>
 #include "gazebo/physics/physics.hh"
 #include "gazebo/common/common.hh"
-#include "gazebo/transport/transport.hh"
 #include "gazebo/msgs/msgs.hh"
+#include "gazebo/transport/transport.hh"
+#include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
+//#include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
+
+#include <gazebo_pkg/ObjectInspectionCloud.h>
+#include <gazebo_pkg/ObjectInspectionQuaternion.h>
+#include <gazebo_pkg/ObjectInspectionCameraPos.h>
+
 #include <stdio.h>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "ros/ros.h"
 #include "/opt/ros/hydro/include/tf/transform_listener.h"
-#include "/home/furdek/catkin_ws/build/gazebo_pkg/custom_pose_message/msgs/custom_pose_request.pb.h"
-//#include "/home/furdek/catkin_ws/devel/include/ObjectInspection.h"
-#include <gazebo_pkg/ObjectInspectionCameraPos.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/pcl_base.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <gazebo_pkg/ObjectInspectionCloud.h>
-#include <gazebo_pkg/ObjectInspectionQuaternion.h>
 
 namespace gazebo {
 

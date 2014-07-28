@@ -24,6 +24,7 @@ VFHTest::VFHTest() {
 
 	this->can_classify = false;
 	this->classifier_ready = false;
+	this->classify_ready = false;
 
 	this->svm_identifier = "test";
 	this->svm_type_classifier = "ml_classifiers/NearestNeighborClassifier"; //SVMClassifier NearestNeighborClassifier
@@ -47,6 +48,9 @@ VFHTest::VFHTest() {
 
 	this->classify_svm_data = n.serviceClient<ml_classifiers::ClassifyData>(
 			"/ml_classifiers/classify_data");
+
+	this->send_incorrect_indexes_client = n.serviceClient<
+			gazebo_pkg::VFHTestCorrectIndexes>("get_incorrect_indexes");
 
 	ROS_INFO("Ready to produce VFHs!");
 
@@ -131,6 +135,8 @@ void VFHTest::CreateSingleSVMFile(std::string &cloud_path,
 
 void VFHTest::ClassifierDataFromPCLVector(
 		std::vector<pcl::PointCloud<PointType>> &cloud_vector) {
+
+	this->models.clear();
 
 	float vfh_max_value = -10000.00;
 	int vfh_idx = 0;
@@ -357,8 +363,6 @@ int VFHTest::TrainSVMData() {
 
 std::vector<std::string> VFHTest::GetNumberOfSVMDataTypes() {
 
-	std::cerr << "get1" << std::endl;
-
 	std::vector<std::string> check_type_vector;
 
 	std::cerr << "SIZE KEZDETBEN: " << check_type_vector.size() << std::endl;
@@ -366,13 +370,6 @@ std::vector<std::string> VFHTest::GetNumberOfSVMDataTypes() {
 	int number_of_objects = 0;
 	std::cerr << "data size: " << this->data.size() << std::endl;
 	for (int i = 0; i < this->data.size(); i++) {
-//		if (i == 0) {
-//
-//			check_type_vector.resize(number_of_objects + 1);
-//			check_type_vector.push_back(this->data[0].target_class);
-//			number_of_objects++;
-//
-//		}
 		if (std::find(check_type_vector.begin(), check_type_vector.end(),
 				this->data[i].target_class) == check_type_vector.end()) {
 			std::cerr << "Talaltam ujat:" << std::endl;
@@ -388,10 +385,43 @@ std::vector<std::string> VFHTest::GetNumberOfSVMDataTypes() {
 
 	}
 
-	std::cerr << "get2" << std::endl;
 	std::cerr << check_type_vector.size() << std::endl;
 
 	return check_type_vector;
+}
+
+std::vector<std::string> VFHTest::DifferentClassifiersVector(
+		std::vector<std::string> &classifier_vector) {
+
+	std::vector<std::string> check_type_vector;
+
+	std::cerr << "check_type_vector size: " << check_type_vector.size()
+			<< std::endl;
+	std::cerr << "classifier vector size: " << classifier_vector.size()
+			<< std::endl;
+
+	int number_of_objects = 0;
+
+	for (int i = 0; i < classifier_vector.size(); i++) {
+		if (std::find(check_type_vector.begin(), check_type_vector.end(),
+				classifier_vector[i]) == check_type_vector.end()) {
+			std::cerr << "New element found!" << std::endl;
+			number_of_objects++;
+			check_type_vector.reserve(number_of_objects);
+			check_type_vector.push_back(classifier_vector[i]);
+			std::cerr << "Contents: ";
+			for (int k = 0; k < check_type_vector.size(); k++) {
+				std::cerr << check_type_vector[k] << " ";
+			}
+			std::cerr << std::endl;
+		}
+
+	}
+
+	std::cerr << check_type_vector.size() << std::endl;
+
+	return (check_type_vector);
+
 }
 
 void VFHTest::SeparateSVMData(std::vector<std::string> class_types_vector) {
@@ -450,6 +480,42 @@ float VFHTest::CalculatePercentageOfFitness(float number_of_elements,
 
 	}
 	return ((number_found / number_of_elements) * 100);
+
+}
+
+std::vector<float> VFHTest::CalculateAllPercentagesOfFitness(
+		float number_of_elements, std::vector<std::string> results,
+		std::vector<std::string> class_types) {
+
+	float number_found = 0;
+	std::vector<float> percentages;
+	std::vector<std::string>::iterator max_value_class_types;
+	max_value_class_types = std::max_element(class_types.begin(),
+			class_types.end());
+	std::string max_value_string;
+	max_value_string = *max_value_class_types;
+	percentages.resize(atoi(max_value_string.c_str()));
+
+	std::cerr << "results' size in percentages: " << results.size()
+			<< std::endl;
+	std::cerr << "number of elements: " << number_of_elements << std::endl;
+	std::cerr << "class_types' size: " << class_types.size() << std::endl;
+
+	for (int i = 0; i < results.size(); i++) {
+		for (int j = 0; j < class_types.size(); j++) {
+
+			if (results[i] == class_types[j]) {
+				percentages[atoi(class_types[j].c_str()) - 1]++;
+			}
+		}
+	}
+
+	for (int m = 0; m < percentages.size(); m++) {
+
+		percentages[m] = percentages[m] / number_of_elements * 100;
+	}
+
+	return (percentages);
 
 }
 
@@ -914,9 +980,9 @@ void VFHTest::DisplayPoints(pcl::PointCloud<PointType>& cloud_to_display) {
 	}
 }
 
-void VFHTest::DisplayResults() {
-	for (int i = 0; i < this->result_vect.size(); i++) {
-		std::cerr << this->result_vect[i] << " ";
+void VFHTest::DisplayResults(std::vector<float> result_vect) {
+	for (int i = 0; i < result_vect.size(); i++) {
+		std::cerr << result_vect[i] << " ";
 	}
 	std::cerr << std::endl;
 }
@@ -936,6 +1002,23 @@ void VFHTest::LoadAndTrainSVMData() {
 	this->CreateSVMClassifier();
 	this->AddSVMClassData();
 	this->TrainSVMData();
+}
+
+std::vector<int> VFHTest::GetInCorrectIndexes() {
+
+	std::vector<int> correct_indexes;
+	int contor = 0;
+
+	for (size_t i = 0; i < this->result_labels.size(); i++) {
+		if (this->result_labels[i] != this->classifier) {
+			contor++;
+			correct_indexes.reserve(contor);
+			correct_indexes.push_back(i);
+		}
+	}
+
+	return correct_indexes;
+
 }
 
 //void VFHTest::WorkFlow(){
@@ -984,6 +1067,34 @@ int main(int argc, char **argv) {
 
 			processer->classifier_ready = false;
 			processer->can_classify = false;
+
+			processer->classify_ready = true;
+
+		}
+
+		if (processer->classify_ready) {
+
+			std::vector<std::string> classifier_vect;
+			classifier_vect = processer->DifferentClassifiersVector(
+					processer->result_labels);
+			std::vector<float> percentages_vector;
+			percentages_vector = processer->CalculateAllPercentagesOfFitness(
+					processer->clouds_to_classify_vect.size(),
+					processer->result_labels, classifier_vect);
+
+			processer->DisplayResults(percentages_vector);
+
+			std::vector<int> incorrect_indexes_vect;
+
+			gazebo_pkg::VFHTestCorrectIndexes corr_ind;
+			corr_ind.request.correct_indexes = processer->GetInCorrectIndexes();
+			if (processer->send_incorrect_indexes_client.call(corr_ind)) {
+				ROS_INFO("Incorrect indexes sent!");
+			} else {
+				ROS_INFO("Incorrect indexes NOT sent!");
+			}
+
+			processer->classify_ready = false;
 		}
 
 	}
@@ -1049,4 +1160,6 @@ int main(int argc, char **argv) {
 //	processer.ComputeVFH(*initial_cloud);
 
 //	return 0;
+
 }
+
