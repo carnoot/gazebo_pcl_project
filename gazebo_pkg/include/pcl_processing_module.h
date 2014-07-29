@@ -5,11 +5,12 @@
 #include "sensor_msgs/Image.h"
 #include "sensor_msgs/PointCloud2.h"
 #include "gazebo_pkg/ObjectInspectionCloud.h"
+#include "gazebo_pkg/ObjectCanSendNextCamPos.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionQuaternion.h"
 #include "gazebo_pkg/ObjectInspectionClassifier.h"
 #include "gazebo_pkg/ObjectInspectionClassifyClouds.h"
-#include "gazebo_pkg/ObjectCanSendNextCamPos.h"
+#include "gazebo_pkg/ObjectInspectionFinalCameraPos.h"
 #include "gazebo_pkg/VFHTestCorrectIndexes.h"
 
 #include "pcl_conversions/pcl_conversions.h"
@@ -101,6 +102,7 @@ public:
 
 	ros::ServiceClient can_send_next_pos;
 	ros::ServiceClient send_clouds_to_classify;
+	ros::ServiceClient send_final_indexes;
 
 	pcl::PointCloud<PointType> cloud;
 	pcl::PointCloud<PointType> cloud_to_process;

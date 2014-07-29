@@ -54,6 +54,7 @@ add_service_files(
 	ObjectInspectionStart.srv
 	ObjectInspectionClassifier.srv
 	ObjectInspectionClassifyClouds.srv
+	ObjectInspectionFinalCameraPos.srv
 	Classifier.srv
 	VFHTestCorrectIndexes.srv
 )

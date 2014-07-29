@@ -64,6 +64,8 @@ bool VFHTest::GetCloudsToClassify(
 		gazebo_pkg::ObjectInspectionClassifyClouds::Request &req,
 		gazebo_pkg::ObjectInspectionClassifyClouds::Response &res) {
 
+	this->clouds_to_classify_vect.clear();
+
 	this->clouds_to_classify_vect.reserve(req.clouds_to_classify.size());
 
 	for (size_t i = 0; i < req.clouds_to_classify.size(); i++) {

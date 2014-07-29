@@ -3,7 +3,7 @@
 PclProcesser::PclProcesser(int argc, char **argv) {
 	ros::NodeHandle n;
 
-	this->first_max_elements = 6;
+	this->first_max_elements = 5;
 
 	this->get_cloud = n.advertiseService("get_cloud", &PclProcesser::GetCloud,
 			this);
@@ -26,6 +26,9 @@ PclProcesser::PclProcesser(int argc, char **argv) {
 	this->send_clouds_to_classify = n.serviceClient<
 			gazebo_pkg::ObjectInspectionClassifyClouds>(
 			"get_clouds_to_classify");
+
+	this->send_final_indexes = n.serviceClient<
+			gazebo_pkg::ObjectInspectionFinalCameraPos>("get_final_indexes");
 
 	this->orig_cloud_to_save_base_path = "/home/furdek/final_test/";
 	this->final_cloud_to_save_base_path = "/home/furdek/kinect_sim_final";
@@ -63,16 +66,27 @@ bool PclProcesser::GetInCorrectIndexes(
 
 }
 
-void PclProcesser::EraseBadClassifiers(){
+void PclProcesser::EraseBadClassifiers() {
 
 	int number_of_elements_erased = 0;
 
-	std::cerr << "best_positions' size: " << this->best_positions.size() << std::endl;
-	std::cerr << "incorrect_indexes' size: " << this->incorrect_indexes.size() << std::endl;
+	std::cerr << "best_positions' size: " << this->best_positions.size()
+			<< std::endl;
+	std::cerr << "best_positions_indexes' size: "
+			<< this->best_positions_indexes.size() << std::endl;
+	std::cerr << "incorrect_indexes' size: " << this->incorrect_indexes.size()
+			<< std::endl;
 
-	for (size_t i = 0; i < this->incorrect_indexes.size(); i++){
-		std::cerr << "incorrect index: " << this->incorrect_indexes[i] << std::endl;
-		this->best_positions.erase(this->best_positions.begin() + this->incorrect_indexes[i] - number_of_elements_erased);
+	for (size_t i = 0; i < this->incorrect_indexes.size(); i++) {
+		std::cerr << "incorrect index: " << this->incorrect_indexes[i]
+				<< std::endl;
+		this->best_positions.erase(
+				this->best_positions.begin() + this->incorrect_indexes[i]
+						- number_of_elements_erased);
+		this->best_positions_indexes.erase(
+				this->best_positions_indexes.begin()
+						+ this->incorrect_indexes[i]
+						- number_of_elements_erased);
 		number_of_elements_erased++;
 	}
 
@@ -205,29 +219,50 @@ void PclProcesser::FindMaxElements(int nr_of_max_needed) {
 	this->best_positions.clear();
 	this->best_positions_indexes.clear();
 
+	this->best_positions.reserve(nr_of_max_needed);
+	this->best_positions_indexes.reserve(nr_of_max_needed);
+
 	int nr_of_max_found = 0;
 	while (nr_of_max_found != nr_of_max_needed) {
 
 		int max = 0;
 		int index = 0;
 
-		for (int i = 0; i < this->result_vect.size(); i++) {
-			if (this->result_vect[i] > max) {
+		std::cerr << "result vect size: " << this->result_vect.size()
+				<< std::endl;
+		std::cerr << "pointcloud vect size: "
+				<< this->clouds_to_process_vect.size() << std::endl;
+
+		for (int i = 1; i < this->result_vect.size(); i++) {
+			if (this->result_vect[i] >= max) {
 				max = this->result_vect[i];
-				this->best_positions_indexes.push_back(i);
 				index = i;
 			}
 		}
-		this->best_positions.reserve(nr_of_max_needed);
-		this->best_positions.push_back(max);
-		this->result_vect.erase(this->result_vect.begin() + index);
-		nr_of_max_found++;
+		if (max > 0) {
+			std::cerr << "index: " << index << std::endl;
+			this->best_positions.push_back(max);
+			this->best_positions_indexes.push_back(index);
+			std::cerr << "before erasing: " << std::endl;
+			this->DisplayResults(this->result_vect);
+			this->result_vect.erase(this->result_vect.begin() + index);
+			std::cerr << "after erasing: " << std::endl;
+			this->DisplayResults(this->result_vect);
+			nr_of_max_found++;
+		}
 	}
 
 	std::cerr << "max elements: ";
 	for (int j = 0; j < nr_of_max_found; j++) {
 		std::cerr << this->best_positions[j] << " ";
 	}
+
+	std::cerr << "best_positions' size: " << this->best_positions.size()
+			<< std::endl;
+	std::cerr << "best_positions' indexes size: "
+			<< this->best_positions_indexes.size() << std::endl;
+
+	std::cerr << "Max Elements Finished!" << std::endl;
 
 }
 
@@ -255,6 +290,9 @@ void PclProcesser::SaveCloudPCDs() {
 		updated_path.append(".pcd");
 		pcl::io::savePCDFile(updated_path, this->clouds_to_process_vect[i]);
 	}
+
+	std::cerr << "Clouds saved!" << std::endl;
+
 }
 
 void PclProcesser::CreateFinalCloudVector() {
@@ -263,12 +301,23 @@ void PclProcesser::CreateFinalCloudVector() {
 
 	final_cloud.reserve(this->first_max_elements);
 
+	std::cerr << "reserve" << std::endl;
+	std::cerr << "clouds_to_process_vect size: "
+			<< this->clouds_to_process_vect.size() << std::endl;
+
+	this->DisplayResults(this->best_positions_indexes);
+
 	for (size_t i = 0; i < this->first_max_elements; i++) {
+		std::cerr << i << std::endl;
+		std::cerr << "best_positions_indexes value: "
+				<< this->best_positions_indexes[i] << std::endl;
 		final_cloud.push_back(
 				this->clouds_to_process_vect[this->best_positions_indexes[i]]);
 	}
 
 	this->clouds_to_process_vect = final_cloud;
+
+	std::cerr << "Created Final Cloud Vector!" << std::endl;
 
 }
 
@@ -356,6 +405,8 @@ int PclProcesser::PointsInBoundingBoxManual(
 	if (to_remove_radius_cloud->size()) {
 		this->clouds_to_process_vect.push_back(*to_remove_radius_cloud);
 		this->final_cloud_to_save_contor++;
+		std::cerr << "pushed into clouds_to_process_vect: "
+				<< this->final_cloud_to_save_contor << std::endl;
 		std::string local_string;
 		local_string.append(this->final_cloud_to_save_base_path);
 		local_string.append(std::to_string(this->final_cloud_to_save_contor));
@@ -366,8 +417,10 @@ int PclProcesser::PointsInBoundingBoxManual(
 
 	this->clouds_processed++;
 	std::cout << this->clouds_processed << std::endl;
-	this->result_vect.reserve(this->clouds_processed);
-	this->result_vect.push_back(points_inside);
+	if (points_inside > 0) {
+		this->result_vect.reserve(this->clouds_processed);
+		this->result_vect.push_back(points_inside);
+	}
 
 	return points_inside;
 
@@ -457,8 +510,6 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 
 	std::cout << "GetCloud" << std::endl;
 
-	this->can_process = true;
-
 	if (!req.can_get_best_positions) {
 		this->cloud_to_process = this->cloud;
 		this->get_best_positions = false;
@@ -467,6 +518,8 @@ bool PclProcesser::GetCloud(gazebo_pkg::ObjectInspectionCloud::Request &req,
 	}
 	std::cerr << "get_best_positions set to: " << this->get_best_positions
 			<< std::endl;
+
+	this->can_process = true;
 
 	return true;
 }
@@ -541,6 +594,7 @@ int main(int argc, char **argv) {
 				}
 			} else {
 				processer.FindMaxElements(processer.first_max_elements);
+				std::cerr << "Creating Final Cloud Vector!" << std::endl;
 				processer.CreateFinalCloudVector();
 				processer.SaveCloudPCDs();
 				processer.SendCloudsToBeClassifed();
@@ -549,16 +603,27 @@ int main(int argc, char **argv) {
 			processer.can_process = false;
 		}
 
-		if (processer.erase_bad_classifiers){
+		if (processer.erase_bad_classifiers) {
 
 			processer.DisplayResults(processer.best_positions);
+			processer.DisplayResults(processer.best_positions_indexes);
 
 			processer.EraseBadClassifiers();
 
 			processer.DisplayResults(processer.best_positions);
+			processer.DisplayResults(processer.best_positions_indexes);
+
+			gazebo_pkg::ObjectInspectionFinalCameraPos final_indexes_srv;
+			final_indexes_srv.request.final_indexes = processer.best_positions_indexes;
+			if (processer.send_final_indexes.call(final_indexes_srv)){
+				ROS_INFO("Final indexes SENT!");
+			}
+			else
+			{
+				ROS_INFO("Final indexes NOT SENT!");
+			}
 
 			processer.erase_bad_classifiers = false;
-
 		}
 
 	}

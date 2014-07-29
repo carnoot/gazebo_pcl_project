@@ -3,9 +3,14 @@
 #include "gazebo_pkg/ObjectInspectionNumber.h"
 #include "gazebo_pkg/ObjectInspectionStart.h"
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
+#include "gazebo_pkg/ObjectInspectionFinalCameraPos.h"
 #include <gazebo.hh>
 #include "gazebo/common/common.hh"
 #include <cstdlib>
+
+std::vector<gazebo_pkg::ObjectInspectionCameraPos> camera_poses_vect;
+std::vector<int> final_camera_indexes;
+int camera_pose_counter;
 
 float radius;
 float teta;
@@ -34,10 +39,11 @@ float first_turn_y;
 float second_turn_x;
 float second_turn_y;
 
-bool can_send_next_cam_pos;
 bool first_phase;
 bool second_phase;
 bool third_phase;
+bool can_send_next_cam_pos;
+bool can_return_final_camera_pos;
 
 void InitCircularParameters() {
 
@@ -50,6 +56,7 @@ void InitCircularParameters() {
 	phi = 1.0; //fix
 
 	rotation_step_size = 1;
+	camera_pose_counter = 0;
 	can_send_next_cam_pos = true;
 
 }
@@ -77,7 +84,7 @@ void InitLinearParameters() {
 	cam_z = 1;
 
 	linear_step_size = 0.6;
-
+	camera_pose_counter = 0;
 	can_send_next_cam_pos = true;
 
 }
@@ -154,6 +161,16 @@ bool callback(gazebo_pkg::ObjectCanSendNextCamPos::Request &req,
 	return (true);
 }
 
+bool callback2(gazebo_pkg::ObjectInspectionFinalCameraPos::Request &req,
+		gazebo_pkg::ObjectInspectionFinalCameraPos::Response &res) {
+
+	final_camera_indexes = req.final_indexes;
+	can_return_final_camera_pos = true;
+
+	return (true);
+
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "add_object_client");
 
@@ -175,6 +192,9 @@ int main(int argc, char **argv) {
 
 		ros::ServiceServer get_can_send_next_cam_pos = n.advertiseService(
 				"get_can_send_next_cam_pos", callback);
+
+		ros::ServiceServer get_final_indexes = n.advertiseService(
+				"get_final_indexes", callback2);
 
 		gazebo_pkg::ObjectInspectionCameraPos camera_pos_srv;
 		gazebo_pkg::ObjectInspectionNumber object_number_srv;
@@ -211,6 +231,12 @@ int main(int argc, char **argv) {
 				camera_pos_srv.request.cameraPos.elems[1] = cam_y;
 				camera_pos_srv.request.cameraPos.elems[2] = cam_z;
 
+				camera_pose_counter++;
+				camera_poses_vect.reserve(camera_pose_counter);
+				camera_poses_vect.push_back(camera_pos_srv);
+
+				std::cerr << "camera_poses_vect size: " << camera_poses_vect.size() << std::endl;
+
 				if (camera_pos_client.call(camera_pos_srv)) {
 					ROS_INFO("camera_pos_srv OK!");
 				} else {
@@ -229,6 +255,18 @@ int main(int argc, char **argv) {
 
 				can_send_next_cam_pos = false;
 
+			}
+
+			if (can_return_final_camera_pos) {
+
+				std::cerr << "Best Camera Positions for Inspection!" << std::endl;
+				for (size_t i = 0; i < final_camera_indexes.size(); i++){
+					for (size_t j = 0; j < 3; j++)
+					std::cerr << camera_poses_vect[final_camera_indexes[i]].request.cameraPos.elems[j] << " ";
+				}
+				std::cerr << std::endl;
+
+				break;
 			}
 
 		}
