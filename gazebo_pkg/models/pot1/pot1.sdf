@@ -1,0 +1,32 @@
+<sdf version="1.4">
+    <model name="pot1">
+        <pose>3.000000 0.000000 1.000000 0.000000 -0.000000 0.000000</pose>
+        <static>1</static>
+        <link name="pot1_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            
+            <collision name="plate_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pot1/meshes/pot1.stl</uri> 
+                        <!--<uri>model://pot1/meshes/pot1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                
+            </collision>
+            
+            <visual name="pot1_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pot1/meshes/pot1.stl</uri> 
+                        <!--<uri>model://pot1/meshes/pot1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

@@ -1,0 +1,32 @@
+<sdf version="1.4">
+    <model name="bowl1">
+        <pose>3.000000 0.000000 1.000000 0.000000 -0.000000 0.000000</pose>
+        <static>1</static>
+        <link name="bowl1_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            
+            <collision name="bowl1_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/bowl1/meshes/bowl1.stl</uri> 
+                        <!--<uri>model://bowl1/meshes/bowl1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                
+            </collision>
+            
+            <visual name="bowl1_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/bowl1/meshes/bowl1.stl</uri> 
+                        <!--<uri>model://bowl1/meshes/bowl1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

@@ -81,9 +81,9 @@ void InitLinearParameters() {
 
 	cam_x = -1.65;
 	cam_y = -6.9;
-	cam_z = 1;
+	cam_z = 1.71;
 
-	linear_step_size = 0.6;
+	linear_step_size = 0.2;
 	camera_pose_counter = 0;
 	can_send_next_cam_pos = true;
 
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
 					return 1;
 				}
 
-				sleep(3);
+				sleep(2);
 
 				if (object_number_client.call(object_number_srv)) {
 					ROS_INFO("object_number_client OK!");

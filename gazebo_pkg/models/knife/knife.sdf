@@ -1,0 +1,32 @@
+<sdf version="1.4">
+    <model name="knife">
+        <pose>3.000000 0.000000 1.000000 0.000000 -0.000000 0.000000</pose>
+        <static>1</static>
+        <link name="knife_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            
+            <collision name="knife_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/knife/meshes/knife.stl</uri> 
+                        <!--<uri>model://knife/meshes/knife.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                
+            </collision>
+            
+            <visual name="knife_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/knife/meshes/knife.stl</uri> 
+                        <!--<uri>model://knife/meshes/knife.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

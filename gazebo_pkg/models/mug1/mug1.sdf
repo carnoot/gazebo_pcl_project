@@ -1,0 +1,32 @@
+<sdf version="1.4">
+    <model name="mug1">
+        <pose>3.000000 0.000000 1.000000 0.000000 -0.000000 0.000000</pose>
+        <static>1</static>
+        <link name="mug1_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            
+            <collision name="mug1_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/mug1/meshes/mug1.stl</uri> 
+                        <!--<uri>model://mug1/meshes/mug1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                
+            </collision>
+            
+            <visual name="mug1_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/mug1/meshes/mug1.stl</uri> 
+                        <!--<uri>model://mug1/meshes/mug1.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

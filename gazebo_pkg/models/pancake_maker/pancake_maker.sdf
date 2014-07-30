@@ -1,0 +1,32 @@
+<sdf version="1.4">
+    <model name="pancake_maker">
+        <pose>3.000000 0.000000 1.000000 0.000000 -0.000000 0.000000</pose>
+        <static>1</static>
+        <link name="pancake_maker_link">
+            <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+            
+            <collision name="pancake_maker_collision">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pancake_maker/meshes/pancake_maker.stl</uri> 
+                        <!--<uri>model://pancake_maker/meshes/pancake_maker.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+                
+            </collision>
+            
+            <visual name="pancake_maker_visual">
+                <pose>0.000000 0.000000 0.000000 0.000000 -0.000000 0.000000</pose>
+                <geometry>
+                    <mesh>
+                        <uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/pancake_maker/meshes/pancake_maker.stl</uri> 
+                        <!--<uri>model://pancake_maker/meshes/pancake_maker.stl</uri>-->
+                        <scale>1 1 1</scale>
+                    </mesh>
+                </geometry>
+            </visual>
+        </link>
+    </model>
+</sdf>

@@ -332,7 +332,7 @@ int PclProcesser::PointsInBoundingBoxManual(
 	PointType min_point, max_point;
 
 	int points_inside = 0;
-	float correction = 0.02;
+	float correction = 0.005;
 
 	pcl::PointCloud<PointType>::Ptr temp_cloud_PTR(
 			new pcl::PointCloud<PointType>(cloud_to_proc));
@@ -416,7 +416,7 @@ int PclProcesser::PointsInBoundingBoxManual(
 	}
 
 	this->clouds_processed++;
-	std::cout << this->clouds_processed << std::endl;
+	std::cout << "clouds processed: " << this->clouds_processed << std::endl;
 	if (points_inside > 0) {
 		this->result_vect.reserve(this->clouds_processed);
 		this->result_vect.push_back(points_inside);
@@ -623,6 +623,11 @@ int main(int argc, char **argv) {
 				ROS_INFO("Final indexes NOT SENT!");
 			}
 
+			processer.result_vect.clear();
+			processer.clouds_to_process_vect.clear();
+
+			processer.clouds_processed = 0;
+			processer.final_cloud_to_save_contor = 0;
 			processer.erase_bad_classifiers = false;
 		}
 

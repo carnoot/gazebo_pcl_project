@@ -1,5 +1,4 @@
 #include "ros_get_coord.h"
-#include "sstream"
 
 using namespace gazebo;
 
@@ -100,7 +99,8 @@ bool RosGetCoord::ObjectToInspect(
 	int nr = req.number;
 	float aux_bounding;
 
-	boost::shared_ptr<gazebo::physics::Model> model_ptr = this->GetSelectedModel(nr);
+	boost::shared_ptr<gazebo::physics::Model> model_ptr =
+			this->GetSelectedModel(nr);
 
 	std::cerr << "String name of model: " << model_ptr->GetName() << std::endl;
 
@@ -453,13 +453,27 @@ std::string RosGetCoord::CreateMaterialColor(gazebo_pkg::Object obj) {
 
 std::string RosGetCoord::CreateMesh(gazebo_pkg::Object obj) {
 	std::string localString;
+	std::string daePathString;
+	boost::filesystem::path daePath;
+
+	daePathString.append("/home/furdek/catkin_ws/src/gazebo_pkg/models/");
+	daePathString.append(obj.SHAPE);
+	daePathString.append("/meshes/");
+	daePathString.append(obj.SHAPE);
+	daePathString.append(".dae");
+
+	daePath = daePathString;
 
 	localString.append("<mesh>\n");
 	localString.append("<uri>/home/furdek/catkin_ws/src/gazebo_pkg/models/");
 	localString.append(obj.SHAPE);
 	localString.append("/meshes/");
 	localString.append(obj.SHAPE);
-	localString.append(".stl");
+	if (boost::filesystem::exists(daePath)) {
+		localString.append(".dae");
+	} else {
+		localString.append(".stl");
+	}
 	localString.append("</uri>\n");
 	localString.append("<scale>1 1 1</scale>\n");
 	localString.append("</mesh>");
@@ -493,8 +507,7 @@ void RosGetCoord::CreateShape(gazebo_pkg::Object obj) {
 	TextSdf.append(this->CreatePositionString(obj));
 	TextSdf.append(this->CreateOrientationString(obj));
 
-	if (obj.MESH)
-		TextSdf.append(this->AddStaticAttribute(true));
+	TextSdf.append(this->AddStaticAttribute(true));
 
 	TextSdf.append(
 			"<link name ='link'>\n<collision name ='collision'>\n<geometry>");

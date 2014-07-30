@@ -25,6 +25,7 @@ VFHTest::VFHTest() {
 	this->can_classify = false;
 	this->classifier_ready = false;
 	this->classify_ready = false;
+	this->already_trained = false;
 
 	this->svm_identifier = "test";
 	this->svm_type_classifier = "ml_classifiers/NearestNeighborClassifier"; //SVMClassifier NearestNeighborClassifier
@@ -102,7 +103,6 @@ pcl::PointCloud<pcl::PointNormal> VFHTest::SmoothCloud(
 
 	mls.setComputeNormals(true);
 
-// Set parameters
 	mls.setInputCloud(cloud);
 	mls.setPolynomialFit(true);
 	mls.setSearchMethod(tree);
@@ -138,12 +138,12 @@ void VFHTest::CreateSingleSVMFile(std::string &cloud_path,
 void VFHTest::ClassifierDataFromPCLVector(
 		std::vector<pcl::PointCloud<PointType>> &cloud_vector) {
 
-	this->models.clear();
-
-	float vfh_max_value = -10000.00;
-	int vfh_idx = 0;
 	vfh_model vfh;
 
+	int vfh_idx = 0;
+	float vfh_max_value = -10000.00;
+
+	this->models.clear();
 	this->models.reserve(cloud_vector.size());
 
 	for (int i = 0; i < cloud_vector.size(); i++) {
@@ -172,9 +172,8 @@ void VFHTest::ClassifierDataFromPCLVector(
 	std::cerr << "Models' size: " << this->models.size() << std::endl;
 
 	this->data_points.clear();
-	this->data.clear();
-
 	this->data_points.resize(this->models.size());
+
 	std::cerr << "data_points' size: " << this->data_points.size() << std::endl;
 	for (size_t j = 0; j < this->models.size(); j++) {
 		this->data_points[j].resize(308);
@@ -185,6 +184,7 @@ void VFHTest::ClassifierDataFromPCLVector(
 
 	std::cerr << "data_points ready: " << this->data_points.size() << std::endl;
 
+	this->data.clear();
 	this->data.resize(cloud_vector.size());
 
 	for (size_t n = 0; n < cloud_vector.size(); n++) {
@@ -333,9 +333,6 @@ int VFHTest::AddSVMClassData() {
 				<< my_add_class_data.request.data[a].target_class << std::endl;
 	}
 
-	std::cerr << "%%%%%%%%%%% " << my_add_class_data.request.data[190].point[0]
-			<< std::endl;
-
 	if (this->add_svm_class_data.call(my_add_class_data)) {
 		std::cerr << "Adding SVM Class Data SUCCESSFUL!" << std::endl;
 		return 0;
@@ -347,8 +344,6 @@ int VFHTest::AddSVMClassData() {
 }
 
 int VFHTest::TrainSVMData() {
-
-	std::cerr << "Training SVM Data" << std::endl;
 
 	ml_classifiers::TrainClassifier my_training_classifier;
 	my_training_classifier.request.identifier = this->svm_identifier;
@@ -367,14 +362,11 @@ std::vector<std::string> VFHTest::GetNumberOfSVMDataTypes() {
 
 	std::vector<std::string> check_type_vector;
 
-	std::cerr << "SIZE KEZDETBEN: " << check_type_vector.size() << std::endl;
-
 	int number_of_objects = 0;
 	std::cerr << "data size: " << this->data.size() << std::endl;
 	for (int i = 0; i < this->data.size(); i++) {
 		if (std::find(check_type_vector.begin(), check_type_vector.end(),
 				this->data[i].target_class) == check_type_vector.end()) {
-			std::cerr << "Talaltam ujat:" << std::endl;
 			check_type_vector.reserve(number_of_objects + 1);
 			check_type_vector.push_back(this->data[i].target_class);
 			number_of_objects++;
@@ -1023,6 +1015,30 @@ std::vector<int> VFHTest::GetInCorrectIndexes() {
 
 }
 
+void VFHTest::CreatelibSVMFileFromModels(std::string &filename_write,
+		std::vector<vfh_model> &models) {
+
+	std::ofstream out;
+
+	out.open(filename_write, std::ofstream::out | std::ofstream::trunc);
+
+	for (size_t i = 0; i < models.size(); i++) {
+		out << this->classifier;
+		out << " ";
+		for (size_t j = 0; j < models[i].second.size(); j++) {
+			out << j + 1;
+			out << ":";
+			out << models[i].second[j];
+			if (j != models[i].second.size() - 1)
+				out << " ";
+		}
+		out << "\n";
+	}
+
+	out.close();
+
+}
+
 //void VFHTest::WorkFlow(){
 //
 //}
@@ -1060,16 +1076,32 @@ int main(int argc, char **argv) {
 
 		if (processer->classifier_ready && processer->can_classify) {
 
-			processer->LoadAndTrainSVMData();
+			if (!processer->already_trained) {
+				processer->LoadAndTrainSVMData();
+				processer->already_trained = true;
+			}
 
 			processer->ClassifierDataFromPCLVector(
 					processer->clouds_to_classify_vect);
 
+			processer->CreatelibSVMFileFromModels(processer->single_SVM_path,
+					processer->models);
+
 			processer->ClassifySVMData();
+
+			processer->GenerateLibSVMCommand(
+					processer->libSVM_svm_train_exe_name,
+					processer->libSVM_training_file_name,
+					processer->libSVM_model_file_name);
+
+			processer->GenerateLibSVMCommand(
+					processer->libSVM_svm_predict_exe_name,
+					processer->single_SVM_path,
+					processer->libSVM_model_file_name,
+					processer->libSVM_results_file_name);
 
 			processer->classifier_ready = false;
 			processer->can_classify = false;
-
 			processer->classify_ready = true;
 
 		}
@@ -1101,10 +1133,6 @@ int main(int argc, char **argv) {
 
 	}
 
-//	processer->GenerateLibSVMCommand(processer->libSVM_svm_train_exe_name,
-//			processer->libSVM_training_file_name,
-//			processer->libSVM_model_file_name);
-
 //
 //	processer->CreateSingleSVMFile(processer->single_cloud_path,
 //			processer->single_vfh_path, processer->single_CSV_path,
@@ -1122,10 +1150,6 @@ int main(int argc, char **argv) {
 //	processer->CreateFileForLibSVM(processer->csv_testing_file_name, processer->libSVM_testing_file_name);
 
 //
-//	processer->GenerateLibSVMCommand(processer->libSVM_svm_predict_exe_name,
-//			processer->libSVM_testing_file_name,
-//			processer->libSVM_model_file_name,
-//			processer->libSVM_results_file_name);
 
 //	processer->primary_folder_path =
 //			main_training_path_to_read_VFH_from.string();

@@ -14,6 +14,9 @@
 #include "gazebo_pkg/ObjectInspectionCameraPos.h"
 #include "gazebo_pkg/ObjectInspectionClassifier.h"
 #include "gazebo_pkg/ObjectInspectionStart.h"
+
+#include <boost/filesystem.hpp>
+
 #include <cstdlib>
 #include <sstream>
 #include <vector>

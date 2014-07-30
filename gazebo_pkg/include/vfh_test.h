@@ -1,9 +1,6 @@
 #ifndef PCL_PROCESSING_MODULE_H
 #define PCL_PROCESSING_MODULE_H
 
-#include "ros/ros.h"
-#include "sensor_msgs/Image.h"
-#include "sensor_msgs/PointCloud2.h"
 #include "gazebo_pkg/ObjectInspectionCloud.h"
 #include "gazebo_pkg/ObjectInspectionBounding.h"
 #include "gazebo_pkg/ObjectInspectionQuaternion.h"
@@ -12,17 +9,22 @@
 #include "gazebo_pkg/ObjectCanSendNextCamPos.h"
 #include "gazebo_pkg/VFHTestCorrectIndexes.h"
 
-#include "ml_classifiers/CreateClassifier.h"
+#include "ros/ros.h"
+#include "sensor_msgs/Image.h"
+#include "sensor_msgs/PointCloud2.h"
+
 #include "ml_classifiers/AddClassData.h"
-#include "ml_classifiers/TrainClassifier.h"
 #include "ml_classifiers/ClassifyData.h"
 #include "ml_classifiers/ClassDataPoint.h"
+#include "ml_classifiers/TrainClassifier.h"
+#include "ml_classifiers/CreateClassifier.h"
 
 #include "pcl/pcl_base.h"
 #include "pcl/io/pcd_io.h"
-#include "pcl/common/common.h"
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/common/common.h>
+#include <pcl/common/transforms.h>
 
 #include <pcl/console/parse.h>
 #include <pcl/console/print.h>
@@ -47,16 +49,16 @@
 #include <gazebo.hh>
 #include "gazebo/physics/physics.hh"
 #include "gazebo/common/common.hh"
-#include <pcl/common/transforms.h>
 
-#include <boost/filesystem.hpp>
+#include <eigen3/Eigen/Core>
+
 #include <flann/flann.h>
 //#include <flann/io/hdf5.h>
 #include <fstream>
 #include <mutex>
-#include <eigen3/Eigen/Core>
-
 #include <iostream>
+#include <boost/filesystem.hpp>
+
 
 typedef pcl::PointXYZRGB PointType;
 typedef std::pair<std::string, std::vector<float> > vfh_model;
@@ -84,6 +86,8 @@ public:
 
 	void CreateSingleSVMFile(std::string &, std::string &, std::string &,
 			std::string &);
+
+	void CreatelibSVMFileFromModels(std::string &, std::vector<vfh_model> &);
 
 	void ClassifierDataFromPCLVector(std::vector<pcl::PointCloud<PointType>> &);
 
@@ -153,6 +157,8 @@ public:
 
 public:
 
+	std::mutex mut;
+
 	std::vector<int> result_vect;
 	std::vector<vfh_model> models;
 	std::vector<int> model_label_values;
@@ -163,19 +169,20 @@ public:
 	std::vector<std::string> result_labels;
 	std::vector<ml_classifiers::ClassDataPoint> data;
 	std::vector<std::vector<ml_classifiers::ClassDataPoint>> separated_data;
-	ml_classifiers::ClassDataPoint classPoint;
-
 	std::vector<pcl::PointCloud<PointType>> clouds_to_classify_vect;
+
+	ml_classifiers::ClassDataPoint classPoint;
 
 	int vfh_files_found;
 	int test_counter;
 	int label;
+
 	float bounding_min[3];
 	float bounding_max[3];
+
 	Eigen::Vector4f min_pt;
 	Eigen::Vector4f max_pt;
 
-	std::mutex mut;
 	std::string primary_folder_path;
 	std::string extension_to_read;
 	std::string csv_training_file_name;
@@ -225,7 +232,7 @@ public:
 
 	double quaternion_values[4];
 
-	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool classifier_ready;bool can_classify; bool classify_ready;
+	bool can_process;bool x_axis_ok;bool y_axis_ok;bool z_axis_ok;bool classifier_ready;bool can_classify; bool classify_ready; bool already_trained;
 
 };
 
