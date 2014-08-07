@@ -171,6 +171,7 @@ target_link_libraries(KitchenFinalPlugin ${catkin_LIBRARIES} ${kdl_parser_LIBRAR
 target_link_libraries(MoveKinectCamera custom_pose_message ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARY})
 target_link_libraries(MoveKinectCameraPlugin custom_pose_message ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARY})
 
+message(${gazebo_pkg_SOURCE_DIR})
 target_link_libraries(gazebo_ros_openni_kinect_test ${catkin_LIBRARIES})
 
 #add_executable(add_two_ints_client src/add_two_ints_client.cpp)
@@ -260,3 +261,4 @@ target_link_libraries(vfh_test ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(ml_classifier_client_test src/ml_classifier_client_test.cpp)
 target_link_libraries(ml_classifier_client_test ${catkin_LIBRARIES})
+

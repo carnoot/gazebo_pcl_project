@@ -38,7 +38,7 @@
 #include <tf/tf.h>
 #include <math.h>
 
-namespace gazebo {
+using namespace gazebo;
 // Register this plugin with the simulator
 GZ_REGISTER_SENSOR_PLUGIN(GazeboRosOpenniKinect)
 
@@ -467,5 +467,3 @@ void GazeboRosOpenniKinect::PublishCameraInfo() {
  pub_disparity_.publish (disp_msg);
  }
  */
-
-}
